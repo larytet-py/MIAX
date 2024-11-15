@@ -1,14 +1,16 @@
 MIAX protocol dissector for Wireshark
 
 
-Find the path in the About->Folders->Personal LUA Plugins
+Find the path in the _About->Folders->Personal LUA Plugins_
 In Linux it can be `/home/$USER/.local/lib/wireshark/plugins`
-Creeate link to the LUA script
+Creeate a hard link to the LUA script
 ```
 mkdir -p /home/$USER/.local/lib/wireshark/plugins
-ln -s miax.lua /home/$USER/.local/lib/wireshark/plugins/miax.lua
+ln  miax.lua /home/$USER/.local/lib/wireshark/plugins/miax.lua
 ```
 
-Enable LUA support in Edit->Preferences->Lua
+If needed enable LUA support in _Edit->Preferences->Lua_. In the _About->Plugins_ look for `miax`. Reload the plugin _Analyze->Relaod LUA Plugins_.
+
+
 
 
