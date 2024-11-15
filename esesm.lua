@@ -25,10 +25,11 @@ ESesM.fields.f_size = ProtoField.uint32("ESesM.size", "Size", base.DEC)
 ESesM.fields.f_order_instructions = ProtoField.uint16("ESesM.size", "Size", base.DEC)
 ESesM.fields.f_time_in_force = ProtoField.string("ESesM.time_in_force", "Time in force", base.ASCII)
 ESesM.fields.f_order_type = ProtoField.string("ESesM.order_type", "Order type", base.ASCII)
-ESesM.fields.f_price_sliding, buffer(offset, 1))
-ESesM.fields.f_sell_trade_protection, buffer(offset, 1))
-ESesM.fields.f_sell_trade_protection_group, buffer(offset, 1))
-ESesM.fields.f_collar_dollar_value, buffer(offset, 8))
+ESesM.fields.f_price_sliding = ProtoField.string("ESesM.price_sliding", "Price slidng", base.ASCII)
+ESesM.fields.f_self_trade_protection = ProtoField.uint8("ESesM.self_trade_protection", "Trade protection", base.DEC)
+ESesM.fields.f_self_trade_protection_group = ProtoField.string("ESesM.self_trade_protection_group", "Self Trade Protection Ggroup", base.ASCII)
+ESesM.fields.f_routing = ProtoField.uint8("ESesM.routing", "Routing", base.DEC)
+ESesM.fields.f_collar_dollar_value = ProtoField.bytes("ESesM.collar_dollar_value", "Collar dollar value")
 ESesM.fields.f_capacity, buffer(offset, 1))
 ESesM.fields.f_account buffer(offset, 16))
 ESesM.fields.f_clearing_account buffer(offset, 4))
@@ -70,9 +71,11 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 1
     subtree:add(ESesM.fields.f_price_sliding, buffer(offset, 1))
     offset = offset + 1
-    subtree:add(ESesM.fields.f_sell_trade_protection, buffer(offset, 1))
+    subtree:add(ESesM.fields.f_self_trade_protection, buffer(offset, 1))
     offset = offset + 1
-    subtree:add(ESesM.fields.f_sell_trade_protection_group, buffer(offset, 1))
+    subtree:add(ESesM.fields.f_self_trade_protection_group, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_routing, buffer(offset, 1))
     offset = offset + 1
     subtree:add(ESesM.fields.f_collar_dollar_value, buffer(offset, 8))
     offset = offset + 8
