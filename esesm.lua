@@ -52,6 +52,7 @@ ESesM.fields.modify_order_notification = ProtoField.bytes("ESesM.modify_order_no
 ESesM.fields.cancel_order_notification = ProtoField.bytes("ESesM.cancel_order_notification", "Cancel order notification")
 ESesM.fields.price_update_notification = ProtoField.bytes("ESesM.price_update_notification", "Price update notification")
 ESesM.fields.reserve_replenishment_notification = ProtoField.bytes("ESesM.reserve_replenishment_notification", "Reserve replenishment notification")
+ESesM.fields.symbol_update = ProtoField.bytes("ESesM.symbol_update", "Symbol update")
 ESesM.fields.execution_notification = ProtoField.bytes("ESesM.execution_notification", "Execution notification")
 ESesM.fields.sequence_number = ProtoField.uint32("ESesM.sequence_number", "Sequence number", base.DEC)
 ESesM.fields.matching_engine_id = ProtoField.uint8("ESesM.matching_engine_id", "Matching engine ID", base.DEC)
@@ -376,6 +377,9 @@ local function process_price_update_notification(buffer, subtree, offset, packet
 end
 
 local function process_reserve_replenishment_notification(buffer, subtree, offset, packet_length)
+end
+
+local function process_symbol_update(buffer, subtree, offset, packet_length)
 end
 
 
