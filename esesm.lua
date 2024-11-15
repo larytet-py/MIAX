@@ -6,29 +6,31 @@ f.packet_type = ProtoField.string("ESesM.packet_type", "Packet Type", base.ASCII
 
 local e_unexpected_packet_type = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
-local e_info_message = ProtoExpert.new("ESesM.info_message.expert", "Informational message", expert.group.SEQUENCE, expert.severity.NOTE)
-ESesM.experts = { e_unexpected_packet_type, e_packet_too_short, e_info_message }
+local e_info_message = ProtoField.string("ESesM.info_text", "Info Text")
+ESesM.experts = { e_unexpected_packet_type, e_packet_too_short }
+-- ESesM.fields = { e_info_message }
+
 
 
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "N1 New order")
+    subtree:add(e_info_message, "N1 New order")
 end
 
 -- Function to process New Order Response (NR)
 local function process_new_order_response(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "NR New order response")
+    subtree:add(e_info_message, "NR New order response")
 end
 
 
 -- Function to handle Sequenced packets
 local function handle_sequenced_packet(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "Sequenced packet")
+    subtree:add(e_info_message, "Sequenced packet")
 end
 
 -- Function to handle Unsequenced packets
 local function handle_unsequenced_packet(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "Unsequenced packet")
+    subtree:add(e_info_message, "Unsequenced packet")
     local packet_type = buffer(0,2):string()
     subtree:add(fields.packet_type, buffer(0, 2))
 
@@ -44,19 +46,19 @@ local function handle_unsequenced_packet(buffer, subtree)
 end
 
 local function handle_login_packet(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "Login")
+    subtree:add(e_info_message, "Login")
 end
 
 local function handle_login_response_packet(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "Login Response")
+    subtree:add(e_info_message, "Login Response")
 end
 
 local function handle_synchronization_complete_packet(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "Synchronization_complete")
+    subtree:add(e_info_message, "Synchronization_complete")
 end
 
 local function handle_retransmission_request_packet(buffer, subtree)
-    subtree:add_proto_expert_info(e_info_message, "Retransmission_request")
+    subtree:add(e_info_message, "Retransmission_request")
 end
 
 -- Dissector function
