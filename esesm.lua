@@ -79,23 +79,23 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 8
     subtree:add(ESesM.fields.f_capacity, buffer(offset, 1))
     offset = offset + 1
-    subtree:add(ESesM.fields.f_account buffer(offset, 16))
+    subtree:add(ESesM.fields.f_account, buffer(offset, 16))
     offset = offset + 16
-    subtree:add(ESesM.fields.f_clearing_account buffer(offset, 4))
+    subtree:add(ESesM.fields.f_clearing_account, buffer(offset, 4))
     offset = offset + 4
-    subtree:add_le(ESesM.fields.f_min_qty buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_min_qty, buffer(offset, 4))
     offset = offset + 4
-    subtree:add_le(ESesM.fields.f_max_floor_qty buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_max_floor_qty, buffer(offset, 4))
     offset = offset + 4
-    subtree:add_le(ESesM.fields.f_display_range_qty buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_display_range_qty, buffer(offset, 4))
     offset = offset + 4
-    subtree:add(ESesM.fields.f_peg_offset buffer(offset, 8))
+    subtree:add(ESesM.fields.f_peg_offset, buffer(offset, 8))
     offset = offset + 8
-    subtree:add(ESesM.fields.f_locate_account buffer(offset, 4))
+    subtree:add(ESesM.fields.f_locate_account, buffer(offset, 4))
     offset = offset + 4
-    subtree:add(ESesM.fields.f_purge_group buffer(offset, 1))
+    subtree:add(ESesM.fields.f_purge_group,buffer(offset, 1))
     offset = offset + 1
-    subtree:add(ESesM.fields.reserved buffer(offset, 19))
+    subtree:add(ESesM.fields.reserved, buffer(offset, 19))
     offset = offset + 19
 end
 
