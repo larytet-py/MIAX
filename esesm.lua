@@ -1,16 +1,13 @@
 -- Define the protocol fields
 local ESesM = Proto("ESesM", "MIAX ESesM Protocol")
-local f = ESesM.fields
-f.packet_type = ProtoField.string("ESesM.packet_type", "Packet Type", base.ASCII)
-
+ESesM.fields.packet_type = ProtoField.string("ESesM.packet_type", "Packet Type", base.ASCII)
+ESesM.fields.f_packet_length = ProtoField.bytes("ESesM.packet_length", "Packet Length")
+ESesM.fields.f_login_data = ProtoField.bytes("ESesM.login_data", "Login Data")
 
 local e_unexpected_packet_type = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
 local e_info_message = ProtoField.string("ESesM.info_text", "Info Text")
-ESesM.experts = { e_unexpected_packet_type, e_packet_too_short }
--- ESesM.fields = { e_info_message }
-
-
+-- ESesM.experts = { e_unexpected_packet_type, e_packet_too_short }
 
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree)
@@ -45,8 +42,13 @@ local function handle_unsequenced(buffer, subtree)
     return true -- Indicate success
 end
 
-local function handle_login(buffer, subtree)
-    subtree:add(e_info_message, "Login")
+local function handle_login(buffer, subtree, offset)
+    local packet_length = buffer(offset, 2):le_uint()
+    subtree:add(e_info_message, "Length: " .. packet_length)
+    subtree:add(ESesM.fields.f_packet_length, buffer(offset, 2))
+
+    local login_data = buffer(offset + 2, packet_length-2)
+    subtree:add(ESesM.fields.f_login_data, login_data)
 end
 
 local function handle_login_response(buffer, subtree)
@@ -94,7 +96,7 @@ function ESesM.dissector(buffer, pinfo, tree)
     local subtree = tree:add(ESesM, buffer(), "MIAX ESesM Protocol Data")
 
     -- Ensure there's enough data
-    local length = buffer(0,2):uint()
+    local length = buffer(0,2):le_uint()
     if length < 3 then
         subtree:add_proto_expert_info(e_packet_too_short, "Packet is too short")
         return
@@ -106,7 +108,7 @@ function ESesM.dissector(buffer, pinfo, tree)
     elseif packet_type == "U" then
         handle_unsequenced(buffer, subtree)
     elseif packet_type == "l" then
-        handle_login(buffer, subtree)
+        handle_login(buffer, subtree, 0)
     elseif packet_type == "r" then
         handle_login_response(buffer, subtree)
     elseif packet_type == "c" then
