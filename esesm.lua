@@ -471,7 +471,7 @@ local function handle_sequenced(buffer, subtree, offset, packet_length)
     subtree:add_le(ESesM.fields.sequence_number, buffer(offset, 8))
     offset = offset + 8
     subtree:add_le(ESesM.fields.matching_engine_id, buffer(offset, 1))
-    offset = offset + 8
+    offset = offset + 1
 
     local packet_type = buffer(offset, 2):string()
     if packet_type == "SU" then
