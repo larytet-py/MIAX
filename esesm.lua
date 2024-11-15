@@ -1,7 +1,7 @@
--- Define the protocol fields
 local ESesM = Proto("ESesM", "MIAX ESesM")
-ESesM.fields.packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
 
+-- Declare all possible protocol fields as required by Wireshark
+ESesM.fields.packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
 ESesM.fields.login = ProtoField.bytes("ESesM.login", "Login")
 ESesM.fields.login_response = ProtoField.bytes("ESesM.login_response", "Login Response")
 ESesM.fields.version = ProtoField.string("ESesM.version", "Version")
@@ -56,6 +56,9 @@ ESesM.fields.symbol_update = ProtoField.bytes("ESesM.symbol_update", "Symbol upd
 ESesM.fields.execution_notification = ProtoField.bytes("ESesM.execution_notification", "Execution notification")
 ESesM.fields.sequence_number = ProtoField.uint32("ESesM.sequence_number", "Sequence number", base.DEC)
 ESesM.fields.matching_engine_id = ProtoField.uint8("ESesM.matching_engine_id", "Matching engine ID", base.DEC)
+ESesM.fields.meo_version = ProtoField.string("ESesM.meo_version", "MEO version", base.ASCII)
+ESesM.fields.session_id = ProtoField.uint32("ESesM.session_id", "Session ID", base.DEC)
+ESesM.fields.system_status = ProtoField.string("ESesM.system_status", "System status", base.ASCII)
 
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
@@ -365,6 +368,16 @@ local function process_modify_order_notification(buffer, subtree, offset, packet
 end
 
 local function process_system_state_notification(buffer, subtree, offset, packet_length)
+    subtree:add(ESesM.fields.matching_engine_time, buffer(offset, 8))
+    offset = offset + 8  
+    subtree:add(ESesM.fields.meo_version, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.session_id, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.system_status, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.reserved, buffer(offset, 8))
+    offset = offset + 8
 end
 
 local function process_new_order_notification(buffer, subtree, offset, packet_length)
