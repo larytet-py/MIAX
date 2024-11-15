@@ -22,11 +22,11 @@ ESesM.fields.f_client_order_id = ProtoField.string("ESesM.client_oder_id", "Clie
 ESesM.fields.f_symbol_id = ProtoField.bytes("ESesM.symbol_id", "Symbol ID")
 ESesM.fields.f_price = ProtoField.bytes("ESesM.price", "Price")
 ESesM.fields.f_size = ProtoField.uint32("ESesM.size", "Size", base.DEC)
-ESesM.fields.f_order_instructions = ProtoField.uint16("ESesM.size", "Size", base.DEC)
+ESesM.fields.f_order_instructions = ProtoField.string("ESesM.order_instructions", "Order instructions", base.ASCII)
 ESesM.fields.f_time_in_force = ProtoField.string("ESesM.time_in_force", "Time in force", base.ASCII)
 ESesM.fields.f_order_type = ProtoField.string("ESesM.order_type", "Order type", base.ASCII)
 ESesM.fields.f_price_sliding = ProtoField.string("ESesM.price_sliding", "Price slidng", base.ASCII)
-ESesM.fields.f_self_trade_protection = ProtoField.uint8("ESesM.self_trade_protection", "Trade protection", base.DEC)
+ESesM.fields.f_self_trade_protection = ProtoField.string("ESesM.self_trade_protection", "Trade protection", base.ASCII)
 ESesM.fields.f_self_trade_protection_group = ProtoField.string("ESesM.self_trade_protection_group", "Self Trade Protection Ggroup", base.ASCII)
 ESesM.fields.f_routing = ProtoField.uint8("ESesM.routing", "Routing", base.DEC)
 ESesM.fields.f_collar_dollar_value = ProtoField.bytes("ESesM.collar_dollar_value", "Collar dollar value")
@@ -47,6 +47,17 @@ local e_info_message = ProtoField.string("ESesM.info_text", "Info Text")
 
 ESesM.experts = { e_undecoded, e_packet_too_short }
 
+function number_to_binary_str(num, bits)
+    bits = bits or 16  -- Default to 16 bits if not specified
+    local t = {}
+    for b = bits, 1, -1 do
+        local rest = math.floor(num / 2^(b - 1))
+        num = num % 2^(b - 1)
+        t[#t + 1] = (rest % 2 == 1) and "1" or "0"
+    end
+    return table.concat(t)
+end
+
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree, offset, packet_length)
     subtree:add(ESesM.fields.f_reserved, buffer(offset, 8))
@@ -61,16 +72,26 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 8
     subtree:add_le(ESesM.fields.f_size, buffer(offset, 4))
     offset = offset + 4
-    subtree:add_le(ESesM.fields.f_order_instructions, buffer(offset, 2))
+
+    local order_instructions_field = buffer(offset, 2)  -- Read 2 bytes (16 bits)
+    local order_instructions_value = order_instructions_field:le_uint()  -- Read 2 bytes (16 bits)
+    local order_instructions_binary_str = number_to_binary_str(order_instructions_value, 16)    
+    subtree:add(ESesM.fields.f_order_instructions, order_instructions_field, "Order Instructions: " .. order_instructions_binary_str)
     offset = offset + 2
+
     subtree:add(ESesM.fields.f_time_in_force, buffer(offset, 1))
     offset = offset + 1
     subtree:add(ESesM.fields.f_order_type, buffer(offset, 1))
     offset = offset + 1
     subtree:add(ESesM.fields.f_price_sliding, buffer(offset, 1))
     offset = offset + 1
-    subtree:add_le(ESesM.fields.f_self_trade_protection, buffer(offset, 1))
+
+    local self_trade_protection_field = buffer(offset, 1)
+    local self_trade_protection_value = self_trade_protection_field:le_uint()  -- Read 2 bytes (16 bits)
+    local self_trade_protection_binary_str = number_to_binary_str(order_instructions_value, 16)    
+    subtree:add(ESesM.fields.f_self_trade_protection, self_trade_protection_field, "Self-trade protection: " .. self_trade_protection_binary_str)
     offset = offset + 1
+
     subtree:add(ESesM.fields.f_self_trade_protection_group, buffer(offset, 1))
     offset = offset + 1
     subtree:add_le(ESesM.fields.f_routing, buffer(offset, 1))
