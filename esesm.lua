@@ -141,12 +141,12 @@ local function handle_unsequenced(buffer, subtree, offset, packet_length)
     local packet_type = buffer(offset, 2):string()
     if packet_type == "N1" then
         offset = offset + 2
-        subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
-        process_new_order(buffer, subtree, offset, packet_length)
+        local item = subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
+        process_new_order(buffer, item, offset, packet_length)
     elseif packet_type == "NR" then
         offset = offset + 2
-        subtree:add(ESesM.fields.f_new_order_response, buffer(offset, packet_length-offset))
-        process_new_order_response(buffer, subtree, offset, packet_length)
+        local item = subtree:add(ESesM.fields.f_new_order_response, buffer(offset, packet_length-offset))
+        process_new_order_response(buffer, item, offset, packet_length)
     else
         local item = subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
         item:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
