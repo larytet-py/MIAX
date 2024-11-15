@@ -1,6 +1,5 @@
 -- Define the protocol fields
 local ESesM = Proto("ESesM", "MIAX ESesM")
-ESesM.fields.packet_type = ProtoField.string("ESesM.packet_type", "Packet Type", base.ASCII)
 ESesM.fields.f_packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
 
 ESesM.fields.f_login = ProtoField.bytes("ESesM.login", "Login")
@@ -15,6 +14,8 @@ ESesM.fields.f_status_code_ok = ProtoField.uint8("ESesM.status_code", "Status Co
 ESesM.fields.f_synchronization_complete = ProtoField.bytes("ESesM.synchronization_complete", "Synchronization Complete")
 ESesM.fields.f_unsequenced_packet = ProtoField.bytes("ESesM.unsequenced_packet", "Unsequenced packet")
 ESesM.fields.f_sequenced_packet = ProtoField.bytes("ESesM.sequenced_packet", "sequenced packet")
+ESesM.fields.f_new_order = ProtoField.string("ESesM.new_order", "New Order", base.ASCII)
+ESesM.fields.f_new_order_response = ProtoField.string("ESesM.new_order_response", "New Order response", base.ASCII)
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
@@ -24,36 +25,34 @@ ESesM.experts = { e_undecoded, e_packet_too_short }
 
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree, offset, packet_length)
-    subtree:add(e_info_message, "N1 New order")
 end
 
 -- Function to process New Order Response (NR)
 local function process_new_order_response(buffer, subtree, offset, packet_length)
-    subtree:add(e_info_message, "NR New order response")
 end
 
 -- Function to handle Sequenced packets
 local function handle_sequenced(buffer, subtree, offset, packet_length)
-    local data = buffer(offset, packet_length-2)
+    local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.f_sequenced_packet, data)
     offset = offset + 1
 end
 
 -- Function to handle Unsequenced packets
 local function handle_unsequenced(buffer, subtree, offset, packet_length)
-    local data = buffer(offset, packet_length-2)
+    local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.f_unsequenced_packet, data)
     offset = offset + 1
 
     local packet_type = buffer(offset, 2):string()
-    local item = subtree:add(ESesM.fields.packet_type, buffer(offset, 2))
-    offset = offset + 2
-
     if packet_type == "N1" then
+        subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
         process_new_order(buffer, subtree)
     elseif packet_type == "NR" then
+        subtree:add(ESesM.fields.f_new_order_response, buffer(offset, packet_length-offset))
         process_new_order_response(buffer, subtree)
     else
+        local item = subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
         item:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
     end
 end
@@ -63,7 +62,7 @@ LoginManager = {
 }
 
 local function handle_login(buffer, subtree, offset, packet_length)  
-    local data = buffer(offset, packet_length-2)
+    local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.f_login, data)
     offset = offset + 1
 
@@ -82,7 +81,7 @@ local function handle_login(buffer, subtree, offset, packet_length)
 end
 
 local function handle_login_response(buffer, subtree, offset, packet_length)
-    local data = buffer(offset, packet_length-2)
+    local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.f_login_response, data)
     offset = offset + 1
 
@@ -104,7 +103,7 @@ local function handle_login_response(buffer, subtree, offset, packet_length)
 end
 
 local function handle_synchronization_complete(buffer, subtree, offset, packet_length)
-    local data = buffer(offset, packet_length-2)
+    local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.f_synchronization_complete, data)
     offset = offset + 1
     subtree:add_le(ESesM.fields.f_number_of_matching_engines, buffer(offset, 1))    
