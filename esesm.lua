@@ -52,6 +52,10 @@ local function handle_unsequenced(buffer, subtree, offset, packet_length)
     return true -- Indicate success
 end
 
+LoginManager = {
+    number_of_matching_engines = nil
+}
+
 local function handle_login(buffer, subtree, offset, packet_length)  
     local data = buffer(offset, packet_length-2)
     subtree:add(ESesM.fields.f_login, data)
@@ -65,6 +69,8 @@ local function handle_login(buffer, subtree, offset, packet_length)
     offset = offset + 8
     subtree:add(ESesM.fields.f_application_protocol, buffer(offset, 8))    
     offset = offset + 8
+
+    LoginManager.number_of_matching_engines = buffer(offset, 1):le_uint()
     subtree:add_le(ESesM.fields.f_number_of_matching_engines, buffer(offset, 1))    
     offset = offset + 1
 end
@@ -73,7 +79,12 @@ local function handle_login_response(buffer, subtree, offset, packet_length)
     local data = buffer(offset, packet_length-2)
     subtree:add(ESesM.fields.f_login_response, data)
     offset = offset + 1
-    subtree:add_le(ESesM.fields.f_number_of_matching_engines, buffer(offset, 1))    
+
+    local number_of_matching_engines = buffer(offset, 1):le_uint()    
+    local item = subtree:add_le(ESesM.fields.f_number_of_matching_engines, buffer(offset, 1))    
+    if number_of_matching_engines ~= LoginManager.number_of_matching_engines then 
+        item:add_proto_expert_info(e_undecoded, "Mismatch number of number of matching engines")
+    end
     offset = offset + 1
 
     local status = buffer(offset,1):string()
@@ -81,7 +92,7 @@ local function handle_login_response(buffer, subtree, offset, packet_length)
         subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
     else
         local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
-        item:add_proto_expert_info(e_undecoded)
+        item:add_proto_expert_info(e_undecoded, "Not Ok")
     end
     offset = offset + 1
 end
