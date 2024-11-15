@@ -1,4 +1,4 @@
-print("Lua scripting is enabled in Wireshark!")
+print("Lua scripting is enabled in Wireshark.")
 
 -- Define the protocol
 local ESesM = Proto("ESesM", "MIAX ESesM Protocol")
@@ -29,7 +29,16 @@ end
 
 -- Register the protocol dissector to a specific port
 local tcp_dissector_table = DissectorTable.get("tcp.port")
--- tcp_dissector_table:add(41010, ESesM)
+tcp_dissector_table:add(41010, ESesM)
 
 -- Enable "Decode As" functionality
 tcp_dissector_table:add_for_decode_as(ESesM)
+
+if gui_enabled() then
+    local splash = TextWindow.new("Hello!");
+    splash:set("ESesM is registered.\n")
+ end
+ 
+
+
+
