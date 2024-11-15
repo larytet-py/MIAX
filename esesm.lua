@@ -145,12 +145,86 @@ local login_status_descriptions = {
     ["L"] = "Request rejected because client already logged in"
 }
 
+local modify_order_response_status = {
+    [" "] = "Successful",
+    ["A"] = "Duplicate Client Order ID",
+    ["B"] = "Not in Live Order Window",
+    ["C"] = "Matching Engine is not available",
+    ["D"] = "Cannot find order with Target Client Order ID",
+    ["E"] = "Exceeded Test Symbol throttle",
+    ["F"] = "Order is routed",
+    ["G"] = "Short sale orders not allowed",
+    ["H"] = "Blocked by MEO user",
+    ["I"] = "Invalid MPID",
+    ["J"] = "Invalid Price",
+    ["K"] = "Invalid Size",
+    ["L"] = "Blocked by Firm over MIAX Member Firm Portal or by Helpdesk",
+    ["M"] = "Exceeded max allowed size",
+    ["N"] = "Exceeded max notional value",
+    ["O"] = "Invalid Client Order ID",
+    ["P"] = "Request is not permitted for this session",
+    ["Q"] = "Specified MPID does not match target order",
+    ["R"] = "Blocked by Cumulative Risk Metrics",
+    ["S"] = "Invalid Symbol ID",
+    ["T"] = "Invalid Target Client Order Id",
+    ["U"] = "Invalid use of Locate Required",
+    ["V"] = "Invalid Sell Short",
+    ["W"] = "Limit Order Price Protection",
+    ["X"] = "MPID not permitted",
+    ["Z"] = "Undefined reason",
+    ["a"] = "Invalid MinQty modification",
+    ["b"] = "Invalid to change MaxFloor Qty",
+    ["c"] = "Modification request is sent to another market and pending completion",
+    ["d"] = "Not allowed, Order is already pending modification",
+    ["t"] = "Invalid MaxFloor Qty",
+    ["y"] = "PAC Orders are not allowed, routing to Primary Listing Market disabled",
+    ["z"] = "Short sale exempt orders not allowed",
+    ["0"] = "Limit price more aggressive than Market Impact Collar",
+    ["1"] = "Market Orders not allowed",
+    ["2"] = "Restricted security not allowed",
+    ["3"] = "Blocked by Order Rate Metrics",
+    ["4"] = "Average Daily Volume Protection",
+    ["7"] = "Invalid or Not Permitted value in Locate Account field",
+    ["8"] = "Blocked by Drop Copy ACOD event",
+    ["9"] = "Blocked by Drop Copy ACOSF event",
+    ["*"] = "Downgraded from older version"
+}
+
+local cancel_order_response_status = {
+    [" "] = "Successful",
+    ["A"] = "Duplicate Client Order ID",
+    ["B"] = "Not in Live Order Window",
+    ["C"] = "Matching Engine is not available",
+    ["D"] = "Cannot find order with Target Client Order ID",
+    ["E"] = "Exceeded Test Symbol throttle",
+    ["F"] = "Routed order already pending cancel",
+    ["I"] = "Invalid MPID",
+    ["O"] = "Invalid Client Order ID",
+    ["P"] = "Request is not permitted for this session",
+    ["Q"] = "Specified MPID does not match target order",
+    ["S"] = "Invalid Symbol ID",
+    ["T"] = "Invalid Target Order ID",
+    ["X"] = "MPID not permitted",
+    ["Z"] = "Undefined reason",
+    ["c"] = "Cancellation Request is routed to another market and pending completion",
+    ["*"] = "Downgraded from older version"
+}
+
+
+function get_modify_order_response_description(code)
+    return modify_order_response_status[code] or "Unknown status code"
+end
+
 function get_login_error_description(code)
     return login_status_descriptions[code] or "Unknown status code"
 end
 
 function get_new_order_error_description(code)
     return new_order_status_descriptions[code] or "Unknown status code"
+end
+
+function get_cancel_order_response_description(code)
+    return cancel_order_response_status[code] or "Unknown status code"
 end
 
 local function process_status_login(buffer, subtree, offset)
