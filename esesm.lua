@@ -17,6 +17,7 @@ ESesM.fields.f_sequenced_packet = ProtoField.bytes("ESesM.sequenced_packet", "se
 ESesM.fields.f_new_order = ProtoField.string("ESesM.new_order", "New Order", base.ASCII)
 ESesM.fields.f_new_order_response = ProtoField.string("ESesM.new_order_response", "New Order response", base.ASCII)
 ESesM.fields.f_reserved = ProtoField.bytes("ESesM.reserved", "Reserved")
+ESesM.fields.f_reserved_1 = ProtoField.bytes("ESesM.reserved_1", "Reserved")
 ESesM.fields.f_mpid = ProtoField.string("ESesM.mpid", "MPID", base.ASCII)
 ESesM.fields.f_client_order_id = ProtoField.string("ESesM.client_oder_id", "Client Orderr ID", base.ASCII)
 ESesM.fields.f_symbol_id = ProtoField.bytes("ESesM.symbol_id", "Symbol ID")
@@ -63,7 +64,7 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     subtree:add(ESesM.fields.f_reserved, buffer(offset, 8))
     offset = offset + 8
     subtree:add(ESesM.fields.f_mpid, buffer(offset, 4))
-    offset = offset + 8
+    offset = offset + 4
     subtree:add(ESesM.fields.f_client_order_id, buffer(offset, 20))
     offset = offset + 20
     subtree:add_le(ESesM.fields.f_symbol_id, buffer(offset, 4))
@@ -116,7 +117,7 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 4
     subtree:add(ESesM.fields.f_purge_group,buffer(offset, 1))
     offset = offset + 1
-    subtree:add(ESesM.fields.reserved, buffer(offset, 19))
+    subtree:add(ESesM.fields.f_reserved_1, buffer(offset, 19))
     offset = offset + 19
 end
 
