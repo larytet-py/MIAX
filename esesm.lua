@@ -13,6 +13,8 @@ ESesM.fields.f_number_of_matching_engines = ProtoField.uint16("ESesM.matching_en
 ESesM.fields.f_status_code = ProtoField.uint8("ESesM.status_code", "Status Code", base.DEC)
 ESesM.fields.f_status_code_ok = ProtoField.uint8("ESesM.status_code", "Status Code OK", base.DEC)
 ESesM.fields.f_synchronization_complete = ProtoField.uint8("ESesM.synchronization_complete", "Synchronization Complete", base.DEC)
+ESesM.fields.f_unsequenced_packet = ProtoField.uint8("ESesM.unsequenced_packet", "Unsequenced packet", base.DEC)
+ESesM.fields.f_sequenced_packet = ProtoField.uint8("ESesM.sequenced_packet", "sequenced packet", base.DEC)
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
@@ -33,24 +35,28 @@ end
 
 -- Function to handle Sequenced packets
 local function handle_sequenced(buffer, subtree, offset, packet_length)
-    subtree:add(e_info_message, "Sequenced packet")
+    local data = buffer(offset, packet_length-2)
+    subtree:add(ESesM.fields.f_sequenced_packet, data)
+    offset = offset + 1
 end
 
 -- Function to handle Unsequenced packets
 local function handle_unsequenced(buffer, subtree, offset, packet_length)
-    subtree:add(e_info_message, "Unsequenced packet")
-    local packet_type = buffer(0,2):string()
-    subtree:add(ESesM.fields.packet_type, buffer(0, 2))
+    local data = buffer(offset, packet_length-2)
+    subtree:add(ESesM.fields.f_unsequenced_packet, data)
+    offset = offset + 1
+
+    local packet_type = buffer(offset, 2):string()
+    local item = subtree:add(ESesM.fields.packet_type, buffer(offset, 2))
+    offset = offset + 2
 
     if packet_type == "N1" then
         process_new_order(buffer, subtree)
     elseif packet_type == "NR" then
         process_new_order_response(buffer, subtree)
     else
-        subtree:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
-        return false -- Indicate error
+        item:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
     end
-    return true -- Indicate success
 end
 
 LoginManager = {
