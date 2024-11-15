@@ -9,16 +9,31 @@ local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Pac
 ESesM.experts = { e_unexpected_packet_type, e_packet_too_short }
 
 
+-- Function to process New Order (N1)
+local function process_new_order(buffer, subtree)
+    subtree:add(f.new_field1, buffer(2, 4))
+    subtree:add(f.new_field2, buffer(6, 2))
+end
+
+-- Function to process New Order Response (NR)
+local function process_new_order_response(buffer, subtree)
+    subtree:add(f.response_field1, buffer(2, 2))
+    subtree:add(f.response_field2, buffer(4, 4))
+end
+
 -- Function to check and add the packet type
 local function check_and_add_packet_type(buffer, subtree, fields)
     local packet_type = buffer(0,2):string()
-    if packet_type ~= "N1" then
+    subtree:add(fields.packet_type, buffer(0, 2))
+
+    if packet_type == "N1" then
+        process_new_order(buffer, subtree)
+    elseif packet_type == "NR" then
+        process_new_order_response(buffer, subtree)
+    else
         subtree:add_proto_expert_info(e_unexpected_packet_type, "Unexpected packet type: " .. packet_type)
-        subtree:add(fields.packet_type, buffer(0, 2))
         return false -- Indicate error
     end
-    -- Add the packet type to the subtree as normal
-    subtree:add(fields.packet_type, buffer(0, 2))
     return true -- Indicate success
 end
 
