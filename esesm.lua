@@ -210,21 +210,29 @@ local cancel_order_response_status = {
     ["*"] = "Downgraded from older version"
 }
 
+local cancel_by_exchange_order_id_status = {
+    [" "] = "Successful",
+    ["A"] = "Duplicate Client Order ID",
+    ["B"] = "Not in Live Order Window",
+    ["C"] = "Matching Engine is not available",
+    ["D"] = "Cannot find order with specified Order ID",
+    ["E"] = "Exceeded Test Symbol throttle",
+    ["F"] = "Routed order already pending cancel",
+    ["G"] = "Cannot cancel order submitted by a FIX session",
+    ["H"] = "Invalid Order ID",
+    ["I"] = "Invalid MPID",
+    ["O"] = "Invalid Client Order ID",
+    ["P"] = "Request is not permitted for this session",
+    ["Q"] = "Specified MPID does not match target order",
+    ["S"] = "Invalid Symbol ID",
+    ["X"] = "MPID not permitted",
+    ["Z"] = "Undefined reason",
+    ["c"] = "Cancellation Request is routed to another market and pending completion",
+    ["*"] = "Downgraded from older version"
+}
 
-function get_modify_order_response_description(code)
-    return modify_order_response_status[code] or "Unknown status code"
-end
-
-function get_login_error_description(code)
-    return login_status_descriptions[code] or "Unknown status code"
-end
-
-function get_new_order_error_description(code)
-    return new_order_status_descriptions[code] or "Unknown status code"
-end
-
-function get_cancel_order_response_description(code)
-    return cancel_order_response_status[code] or "Unknown status code"
+function get_status_description(code, status_dict)
+    return status_dict[code] or "Unknown status code"
 end
 
 local function process_status_login(buffer, subtree, offset)
@@ -234,7 +242,7 @@ local function process_status_login(buffer, subtree, offset)
         subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
     else
         local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
-        item:add_proto_expert_info(e_undecoded, get_login_error_description(status))
+        item:add_proto_expert_info(e_undecoded, get_status_description(status, login_status_descriptions))
     end
 end
 
@@ -245,7 +253,7 @@ local function process_status_new_order(buffer, subtree, offset)
         subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
     else
         local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
-        item:add_proto_expert_info(e_undecoded, get_new_order_error_description(status))
+        item:add_proto_expert_info(e_undecoded, get_status_description(status, new_order_status_descriptions))
     end
 end
 
