@@ -40,7 +40,7 @@ ESesM.fields.display_range_qty = ProtoField.uint32("ESesM.display_range_qty", "D
 ESesM.fields.peg_offset = ProtoField.bytes("ESesM.peg_offset", "Peg offset")
 ESesM.fields.locate_account = ProtoField.string("ESesM.locate_account", "Locate Account", base.ASCII)
 ESesM.fields.purge_group = ProtoField.string("ESesM.purge_group", "Purge group", base.ASCII)
-ESesM.fields.matching_engine_time = ProtoField.uint32("ESesM.matching_engine_time", "Matching engine time", base.DEC)
+ESesM.fields.matching_engine_time = ProtoField.uint64("ESesM.matching_engine_time", "Matching engine time", base.DEC)
 ESesM.fields.order_id = ProtoField.uint32("ESesM.order_id", "Order ID", base.DEC)
 ESesM.fields.modify_order = ProtoField.bytes("ESesM.modify_order", "Modify order")
 ESesM.fields.modify_order_response = ProtoField.bytes("ESesM.modify_order_response", "Mmodify order response")
@@ -54,10 +54,10 @@ ESesM.fields.price_update_notification = ProtoField.bytes("ESesM.price_update_no
 ESesM.fields.reserve_replenishment_notification = ProtoField.bytes("ESesM.reserve_replenishment_notification", "Reserve replenishment notification")
 ESesM.fields.symbol_update = ProtoField.bytes("ESesM.symbol_update", "Symbol update")
 ESesM.fields.execution_notification = ProtoField.bytes("ESesM.execution_notification", "Execution notification")
-ESesM.fields.sequence_number = ProtoField.uint32("ESesM.sequence_number", "Sequence number", base.DEC)
+ESesM.fields.sequence_number = ProtoField.uint64("ESesM.sequence_number", "Sequence number", base.DEC)
 ESesM.fields.matching_engine_id = ProtoField.uint8("ESesM.matching_engine_id", "Matching engine ID", base.DEC)
 ESesM.fields.meo_version = ProtoField.string("ESesM.meo_version", "MEO version", base.ASCII)
-ESesM.fields.session_id = ProtoField.uint32("ESesM.session_id", "Session ID", base.DEC)
+ESesM.fields.session_id = ProtoField.uint8("ESesM.session_id", "Session ID", base.DEC)
 ESesM.fields.system_status = ProtoField.string("ESesM.system_status", "System status", base.ASCII)
 
 
@@ -368,7 +368,7 @@ local function process_modify_order_notification(buffer, subtree, offset, packet
 end
 
 local function process_system_state_notification(buffer, subtree, offset, packet_length)
-    subtree:add(ESesM.fields.matching_engine_time, buffer(offset, 8))
+    subtree:add_le(ESesM.fields.matching_engine_time, buffer(offset, 8))
     offset = offset + 8  
     subtree:add(ESesM.fields.meo_version, buffer(offset, 8))
     offset = offset + 8
@@ -398,7 +398,7 @@ end
 
 -- Function to process New Order Response (NR)
 local function process_new_order_response(buffer, subtree, offset, packet_length)
-    subtree:add(ESesM.fields.matching_engine_time, buffer(offset, 8))
+    subtree:add_le(ESesM.fields.matching_engine_time, buffer(offset, 8))
     offset = offset + 8
     subtree:add(ESesM.fields.mpid, buffer(offset, 4))
     offset = offset + 4
@@ -482,61 +482,61 @@ end
 
 local function handle_sequenced(buffer, subtree, offset, packet_length)
     local data = buffer(offset, packet_length-offset)
-    subtree:add(ESesM.fields.sequenced_packet, data)
+    local sequenced_packet_tree = subtree:add(ESesM.fields.sequenced_packet, data)
     offset = offset + 1
 
-    subtree:add_le(ESesM.fields.sequence_number, buffer(offset, 8))
+    sequenced_packet_tree:add_le(ESesM.fields.sequence_number, buffer(offset, 8))
     offset = offset + 8
-    subtree:add_le(ESesM.fields.matching_engine_id, buffer(offset, 1))
+    sequenced_packet_tree:add_le(ESesM.fields.matching_engine_id, buffer(offset, 1))
     offset = offset + 1
 
     local packet_type = buffer(offset, 2):string()
     if packet_type == "SU" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.symbol_update, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.symbol_update, buffer(offset, packet_length-offset))
         process_symbol_update(buffer, item, offset, packet_length)
     elseif packet_type == "NR" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.new_order_response, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.new_order_response, buffer(offset, packet_length-offset))
         process_new_order_response(buffer, item, offset, packet_length)
     elseif packet_type == "MR" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.modify_order_response, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.modify_order_response, buffer(offset, packet_length-offset))
         process_modify_order_response(buffer, item, offset, packet_length)
     elseif packet_type == "CR" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.cancel_order_response, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.cancel_order_response, buffer(offset, packet_length-offset))
         process_cancel_order_response(buffer, item, offset, packet_length)
     elseif packet_type == "SN" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.system_state_notification, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.system_state_notification, buffer(offset, packet_length-offset))
         process_system_state_notification(buffer, item, offset, packet_length)
     elseif packet_type == "O1" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.new_order_notification, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.new_order_notification, buffer(offset, packet_length-offset))
         process_new_order_notification(buffer, item, offset, packet_length)
     elseif packet_type == "MN" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.modify_order_notification, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.modify_order_notification, buffer(offset, packet_length-offset))
         process_modify_order_notification(buffer, item, offset, packet_length)
     elseif packet_type == "XN" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.cancel_order_notification, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.cancel_order_notification, buffer(offset, packet_length-offset))
         process_cancel_order_notification(buffer, item, offset, packet_length)
     elseif packet_type == "PU" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.price_update_notification, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.price_update_notification, buffer(offset, packet_length-offset))
         process_price_update_notification(buffer, item, offset, packet_length)
     elseif packet_type == "RA" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.reserve_replenishment_notification, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.reserve_replenishment_notification, buffer(offset, packet_length-offset))
         process_reserve_replenishment_notification(buffer, item, offset, packet_length)
     elseif packet_type == "E1" then
         offset = offset + 2
-        local item = subtree:add(ESesM.fields.execution_notification, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.execution_notification, buffer(offset, packet_length-offset))
         process_execution_notification(buffer, item, offset, packet_length)
     else
-        local item = subtree:add(ESesM.fields.new_order, buffer(offset, packet_length-offset))
+        local item = sequenced_packet_tree:add(ESesM.fields.new_order, buffer(offset, packet_length-offset))
         item:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
     end
 end
