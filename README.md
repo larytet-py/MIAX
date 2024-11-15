@@ -1,5 +1,9 @@
 # MIAX protocol dissector for Wireshark
 
+Based on 
+```MIAX Pearl Equities Exchange Extended TCP Session Management (ESesM) Protocol Specification
+Revision Date: 06/26/2020
+Version 1.0.a```
 
 Find the path in the _About->Folders->Personal LUA Plugins_
 In Linux it can be `/home/$USER/.local/lib/wireshark/plugins`
