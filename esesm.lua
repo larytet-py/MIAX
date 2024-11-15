@@ -81,6 +81,10 @@ local function handle_client_heartbeat(buffer, subtree)
     subtree:add(e_info_message, "Client Heartbeat")
 end
 
+local function handle_test(buffer, subtree)
+    subtree:add(e_info_message, "Test")
+end
+
 -- Dissector function
 function ESesM.dissector(buffer, pinfo, tree)
     -- Set protocol name in the packet list
@@ -119,6 +123,8 @@ function ESesM.dissector(buffer, pinfo, tree)
         handle_server_heartbeat(buffer, subtree)
     elseif packet_type == "1" then
         handle_client_heartbeat(buffer, subtree)
+    elseif packet_type == "T" then
+        handle_test(buffer, subtree)
     else
         subtree:add_proto_expert_info(e_unexpected_packet_type, "Unknown packet type: " .. packet_type)
     end
