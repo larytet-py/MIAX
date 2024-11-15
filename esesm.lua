@@ -1,7 +1,7 @@
 -- Define the protocol fields
-local ESesM = Proto("ESesM", "MIAX ESesM Protocol")
+local ESesM = Proto("ESesM", "MIAX ESesM")
 ESesM.fields.packet_type = ProtoField.string("ESesM.packet_type", "Packet Type", base.ASCII)
-ESesM.fields.f_packet_length = ProtoField.bytes("ESesM.packet_length", "Packet Length")
+ESesM.fields.f_packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
 ESesM.fields.f_login_data = ProtoField.bytes("ESesM.login_data", "Login Data")
 
 local e_unexpected_packet_type = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
@@ -42,11 +42,10 @@ local function handle_unsequenced(buffer, subtree)
     return true -- Indicate success
 end
 
-local function handle_login(buffer, subtree, offset)
-    local packet_length = buffer(offset, 2):le_uint()
-    subtree:add(e_info_message, "Length: " .. packet_length)
-    subtree:add(ESesM.fields.f_packet_length, buffer(offset, 2))
+local function handle_login(buffer, subtree, offset)  
+    subtree:add_le(ESesM.fields.f_packet_length, buffer(offset, 2))
 
+    local packet_length = buffer(offset, 2):le_uint()
     local login_data = buffer(offset + 2, packet_length-2)
     subtree:add(ESesM.fields.f_login_data, login_data)
 end
