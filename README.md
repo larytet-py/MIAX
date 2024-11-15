@@ -10,7 +10,8 @@ ln  esesm.lua /home/$USER/.local/lib/wireshark/plugins/3.6/esesm.lua
 ```
 
 If needed enable LUA support in _Edit->Preferences->Lua_ or in the `~/.local/lib/wireshark/init.lua` . In the _About->Plugins_ look for `miax`. Reload the plugin _Analyze->Relaod LUA Plugins_.
-See _To0ols_LUA_Console_ for debug output.
+See _Tools_LUA_Console_ for debug output.
 
+In the _Analyze->Decode As_ Pick TCP, port 41010, in the current pick ESESM.
 
 
