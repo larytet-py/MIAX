@@ -231,8 +231,87 @@ local cancel_by_exchange_order_id_status = {
     ["*"] = "Downgraded from older version"
 }
 
+local mass_cancel_response_status = {
+    [" "] = "Successful",
+    ["I"] = "Invalid MPID",
+    ["X"] = "MPID not permitted",
+    ["P"] = "Request is not permitted for this session",
+    ["R"] = "Invalid Scope",
+    ["A"] = "Invalid action",
+    ["C"] = "Matching Engine not available",
+    ["U"] = "State of the request for this Matching Engine is unknown",
+    ["O"] = "Invalid Client Order ID",
+    ["Z"] = "Undefined reason",
+    ["6"] = "Invalid Purge Group specified",
+    ["*"] = "Downgraded from older version"
+}
+
+local cancel_reduce_size_order_reason = {
+    ["A"] = "Cancelled due to Cumulative Risk Metrics",
+    ["B"] = "Reserved for future use",
+    ["C"] = "Time in Force cancelled",
+    ["D"] = "Auto Cancel on Disconnect (ACOD)",
+    ["E"] = "Post Only order is locking/crossing MIAX Pearl Equities BBO",
+    ["F"] = "Auto Cancel on System Failure (ACOSF)",
+    ["G"] = "Cancelled due to price sliding instruction",
+    ["H"] = "Cancelled by Helpdesk or over MIAX Member Firm Portal",
+    ["I"] = "Order Expired",
+    ["J"] = "Symbol trading status makes PAC Market order non tradeable",
+    ["K"] = "Trading Collar Protection",
+    ["L"] = "Sell Short ISO when Short Sale Price Test is in effect",
+    ["M"] = "Symbol is not trading",
+    ["N"] = "Limit Order Price Protection",
+    ["O"] = "Route to Primary Listing Market Rejected",
+    ["P"] = "Cancelled by a Mass Cancel Request over a Priority Purge port",
+    ["Q"] = "Unexpected Cancel by Primary Listing Market",
+    ["R"] = "Cancelled due to failed Price Improvement route",
+    ["S"] = "Cancelled due to Primary Auction route timeout",
+    ["T"] = "Cancelled due to Order Rate Protection",
+    ["U"] = "Cancelled by user through order entry session",
+    ["V"] = "Invalid Pegged Order Price",
+    ["W"] = "PAC Order Cancelled as Security is halted and Closing Auction at Primary Listing Market will not be conducted.",
+    ["X"] = "Not Applicable. Used when Pending Cancel Status is 'X'",
+    ["Y"] = "Primary Auction order is Cancelled due to a modification reject from Primary Listing Market.",
+    ["0"] = "Cancelled due to Market Impact Collar",
+    ["1"] = "Full cancel due to Self-Trade Protection - Cancel Newest Instruction",
+    ["2"] = "Full cancel due to Self-Trade Protection - Cancel Oldest Instruction",
+    ["3"] = "Full cancel due to Self-Trade Protection - Cancel Both Instruction",
+    ["4"] = "Full/Partial cancel due to Self-Trade Protection - Decrement and Cancel Instruction",
+    ["5"] = "Cancelled due to Drop Copy ACOD event",
+    ["6"] = "Cancelled due to Drop Copy ACOSF event",
+    ["7"] = "Cancelled as order did not set NBBO",
+    ["8"] = "Cancelled by user through a session other than the order entry session",
+    ["Z"] = "Undefined reason",
+    ["*"] = "Downgraded from older version"
+}
+
+local executing_trading_center = {
+    ['A'] = "NYSE American",
+    ['B'] = "NASDAQ BX",
+    ['C'] = "NYSE National",
+    ['H'] = "MIAX Pearl Equities",
+    ['I'] = "NASDAQ ISE",
+    ['J'] = "CBOE EDGA Exchange",
+    ['K'] = "CBOE EDGX Exchange",
+    ['L'] = "Long-Term Stock Exchange",
+    ['M'] = "NYSE Chicago",
+    ['N'] = "New York Stock Exchange",
+    ['P'] = "NYSE Arca",
+    ['Q'] = "NASDAQ",
+    ['U'] = "Members Exchange",
+    ['V'] = "Investors’ Exchange",
+    ['X'] = "NASDAQ PHLX",
+    ['Y'] = "CBOE BYX Exchange",
+    ['Z'] = "CBOE BZX Exchange"
+}
+
+
 function get_status_description(code, status_dict)
     return status_dict[code] or "Unknown status code"
+end
+
+function get_trading_center(code)
+    return executing_trading_center[code] or "Unknown trading center"
 end
 
 local function process_status_login(buffer, subtree, offset)
