@@ -148,7 +148,7 @@ function ESesM.dissector(buffer, pinfo, tree)
 
     -- Ensure there's enough data
     local length = buffer(0,2):le_uint()
-    if length < 3 then
+    if length < 1 then
         subtree:add_proto_expert_info(e_packet_too_short, "Packet is too short")
         return
     end
