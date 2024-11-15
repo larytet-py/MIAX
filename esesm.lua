@@ -17,7 +17,7 @@ function ESesM.dissector(buffer, pinfo, tree)
     local subtree = tree:add(ESesM, buffer(), "MIAX ESesM Protocol Data")
 
     -- Ensure there's enough data
-    if buffer:len() < 500000 then
+    if buffer:len() < 5 then
         subtree:add_expert_info(PI_MALFORMED, PI_ERROR, "Packet is too short")
         return
     end
