@@ -43,6 +43,22 @@ local function handle_unsequenced_packet(buffer, subtree)
     return true -- Indicate success
 end
 
+local function handle_login_packet(buffer, subtree)
+    subtree:add_proto_expert_info(e_info_message, "Login")
+end
+
+local function handle_login_response_packet(buffer, subtree)
+    subtree:add_proto_expert_info(e_info_message, "Login Response")
+end
+
+local function handle_synchronization_complete_packet(buffer, subtree)
+    subtree:add_proto_expert_info(e_info_message, "Synchronization_complete")
+end
+
+local function handle_retransmission_request_packet(buffer, subtree)
+    subtree:add_proto_expert_info(e_info_message, "Retransmission_request")
+end
+
 -- Dissector function
 function ESesM.dissector(buffer, pinfo, tree)
     -- Set protocol name in the packet list
@@ -63,6 +79,14 @@ function ESesM.dissector(buffer, pinfo, tree)
         handle_sequenced_packet(buffer, subtree)
     elseif packet_type == "U" then
         handle_unsequenced_packet(buffer, subtree)
+    elseif packet_type == "l" then
+        handle_login_packet(buffer, subtree)
+    elseif packet_type == "r" then
+        handle_login_response_packet(buffer, subtree)
+    elseif packet_type == "c" then
+        handle_synchronization_complete_packet(buffer, subtree)
+    elseif packet_type == "a" then
+        handle_retransmission_request_packet(buffer, subtree)
     else
         subtree:add_proto_expert_info(e_unexpected_packet_type, "Unknown packet type: " .. packet_type)
     end
