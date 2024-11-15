@@ -29,7 +29,7 @@ end
 
 -- Register the protocol dissector to a specific port
 local tcp_dissector_table = DissectorTable.get("tcp.port")
-tcp_dissector_table:add(41010, ESesM)
+-- tcp_dissector_table:add(41010, ESesM)
 
 -- Enable "Decode As" functionality
 tcp_dissector_table:add_for_decode_as(ESesM)
