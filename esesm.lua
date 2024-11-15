@@ -53,6 +53,8 @@ ESesM.fields.cancel_order_notification = ProtoField.bytes("ESesM.cancel_order_no
 ESesM.fields.price_update_notification = ProtoField.bytes("ESesM.price_update_notification", "Price update notification")
 ESesM.fields.reserve_replenishment_notification = ProtoField.bytes("ESesM.reserve_replenishment_notification", "Reserve replenishment notification")
 ESesM.fields.execution_notification = ProtoField.bytes("ESesM.execution_notification", "Execution notification")
+ESesM.fields.sequence_number = ProtoField.uint32("ESesM.sequence_number", "Sequence number", base.DEC)
+ESesM.fields.matching_engine_id = ProtoField.uint8("ESesM.matching_engine_id", "Matching engine ID", base.DEC)
 
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
@@ -465,6 +467,11 @@ local function handle_sequenced(buffer, subtree, offset, packet_length)
     local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.sequenced_packet, data)
     offset = offset + 1
+
+    subtree:add_le(ESesM.fields.sequence_number, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add_le(ESesM.fields.matching_engine_id, buffer(offset, 1))
+    offset = offset + 8
 
     local packet_type = buffer(offset, 2):string()
     if packet_type == "SU" then
