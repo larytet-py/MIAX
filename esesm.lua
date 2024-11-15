@@ -8,6 +8,7 @@ ESesM.fields.f_version = ProtoField.string("ESesM.version", "Version")
 ESesM.fields.f_username = ProtoField.string("ESesM.username", "Username")
 ESesM.fields.f_computer_id = ProtoField.string("ESesM.computer_id", "Computer ID") 
 ESesM.fields.f_application_protocol = ProtoField.string("ESesM.application_protocol", "Application protocol") 
+ESesM.fields.f_number_of_matching_engines = ProtoField.uint16("ESesM.matching_engines", "Matching Engines") 
 
 
 local e_unexpected_packet_type = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
@@ -60,6 +61,8 @@ local function handle_login(buffer, subtree, offset, packet_length)
     offset = offset + 8
     subtree:add(ESesM.fields.f_application_protocol, buffer(offset, 8))    
     offset = offset + 8
+    subtree:add_le(ESesM.fields.f_number_of_matching_engines, buffer(offset, 1))    
+    offset = offset + 1
 end
 
 local function handle_login_response(buffer, subtree)
