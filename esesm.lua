@@ -12,6 +12,7 @@ ESesM.fields.f_application_protocol = ProtoField.string("ESesM.application_proto
 ESesM.fields.f_number_of_matching_engines = ProtoField.uint16("ESesM.matching_engines", "Matching Engines") 
 ESesM.fields.f_status_code = ProtoField.uint8("ESesM.status_code", "Status Code", base.DEC)
 ESesM.fields.f_status_code_ok = ProtoField.uint8("ESesM.status_code", "Status Code OK", base.DEC)
+ESesM.fields.f_synchronization_complete = ProtoField.uint8("ESesM.synchronization_complete", "Synchronization Complete", base.DEC)
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
@@ -98,7 +99,11 @@ local function handle_login_response(buffer, subtree, offset, packet_length)
 end
 
 local function handle_synchronization_complete(buffer, subtree, offset, packet_length)
-    subtree:add(e_info_message, "Synchronization_complete")
+    local data = buffer(offset, packet_length-2)
+    subtree:add(ESesM.fields.f_synchronization_complete, data)
+    offset = offset + 1
+    subtree:add_le(ESesM.fields.f_number_of_matching_engines, buffer(offset, 1))    
+    offset = offset + 1
 end
 
 local function handle_retransmission_request(buffer, subtree, offset, packet_length)
