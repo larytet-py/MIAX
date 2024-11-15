@@ -7,7 +7,6 @@ ESesM.fields.f_login_data = ProtoField.bytes("ESesM.login_data", "Login Data")
 local e_unexpected_packet_type = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
 local e_info_message = ProtoField.string("ESesM.info_text", "Info Text")
--- ESesM.experts = { e_unexpected_packet_type, e_packet_too_short }
 
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree)
