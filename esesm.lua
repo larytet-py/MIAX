@@ -42,6 +42,10 @@ ESesM.fields.f_locate_account = ProtoField.string("ESesM.locate_account", "Locat
 ESesM.fields.f_purge_group = ProtoField.string("ESesM.purge_group", "Purge group", base.ASCII)
 ESesM.fields.f_matching_engine_time = ProtoField.uint32("ESesM.matching_engine_time", "Matching engine time", base.DEC)
 ESesM.fields.f_order_id = ProtoField.uint32("ESesM.order_id", "Order ID", base.DEC)
+ESesM.fields.f_modify_order = ProtoField.bytes("ESesM.modify_order", "Modify order")
+ESesM.fields.f_modify_order_response = ProtoField.bytes("ESesM.modify_order_response", "Mmodify order response")
+ESesM.fields.f_cancel_order = ProtoField.bytes("ESesM.cancel_order", "Cancel order")
+ESesM.fields.f_cancel_order_response = ProtoField.bytes("ESesM.cancel_order_response", "Cancel order response")
 
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
@@ -171,6 +175,19 @@ local function process_status_new_order(buffer, subtree, offset)
     end
 end
 
+local function process_cancel_order_response(buffer, subtree, offset, packet_length)
+end
+
+local function process_modify_order_response(buffer, subtree, offset, packet_length)
+end
+
+local function process_modify_order(buffer, subtree, offset, packet_length)
+end
+
+local function process_cancel_order(buffer, subtree, offset, packet_length)
+end
+    
+
 -- Function to process New Order Response (NR)
 local function process_new_order_response(buffer, subtree, offset, packet_length)
     subtree:add(ESesM.fields.f_matching_engine_time, buffer(offset, 8))
@@ -275,6 +292,22 @@ local function handle_unsequenced(buffer, subtree, offset, packet_length)
         offset = offset + 2
         local item = subtree:add(ESesM.fields.f_new_order_response, buffer(offset, packet_length-offset))
         process_new_order_response(buffer, item, offset, packet_length)
+    elseif packet_type == "M1" then
+        offset = offset + 2
+        local item = subtree:add(ESesM.fields.f_modify_order, buffer(offset, packet_length-offset))
+        process_modify_order(buffer, item, offset, packet_length)
+    elseif packet_type == "MR" then
+        offset = offset + 2
+        local item = subtree:add(ESesM.fields.f_modify_order_response, buffer(offset, packet_length-offset))
+        process_modify_order_response(buffer, item, offset, packet_length)
+    elseif packet_type == "CO" then
+        offset = offset + 2
+        local item = subtree:add(ESesM.fields.f_cancel_order, buffer(offset, packet_length-offset))
+        process_cancel_order(buffer, item, offset, packet_length)
+    elseif packet_type == "CR" then
+        offset = offset + 2
+        local item = subtree:add(ESesM.fields.f_cancel_order_response, buffer(offset, packet_length-offset))
+        process_cancel_order_response(buffer, item, offset, packet_length)
     else
         local item = subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
         item:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
