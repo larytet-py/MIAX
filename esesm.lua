@@ -3,36 +3,40 @@ local ESesM = Proto("ESesM", "MIAX ESesM")
 ESesM.fields.packet_type = ProtoField.string("ESesM.packet_type", "Packet Type", base.ASCII)
 ESesM.fields.f_packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
 
-ESesM.fields.f_login_data = ProtoField.bytes("ESesM.login_data", "Login Data")
+ESesM.fields.f_login = ProtoField.bytes("ESesM.login", "Login")
+ESesM.fields.f_login_response = ProtoField.bytes("ESesM.login_response", "Login Response")
 ESesM.fields.f_version = ProtoField.string("ESesM.version", "Version")
 ESesM.fields.f_username = ProtoField.string("ESesM.username", "Username")
 ESesM.fields.f_computer_id = ProtoField.string("ESesM.computer_id", "Computer ID") 
 ESesM.fields.f_application_protocol = ProtoField.string("ESesM.application_protocol", "Application protocol") 
 ESesM.fields.f_number_of_matching_engines = ProtoField.uint16("ESesM.matching_engines", "Matching Engines") 
+ESesM.fields.f_status_code = ProtoField.uint8("ESesM.status_code", "Status Code", base.DEC)
+ESesM.fields.f_status_code_ok = ProtoField.uint8("ESesM.status_code", "Status Code OK", base.DEC)
 
-
-local e_unexpected_packet_type = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
+local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
 local e_info_message = ProtoField.string("ESesM.info_text", "Info Text")
 
+ESesM.experts = { e_undecoded, e_packet_too_short }
+
 -- Function to process New Order (N1)
-local function process_new_order(buffer, subtree)
+local function process_new_order(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "N1 New order")
 end
 
 -- Function to process New Order Response (NR)
-local function process_new_order_response(buffer, subtree)
+local function process_new_order_response(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "NR New order response")
 end
 
 
 -- Function to handle Sequenced packets
-local function handle_sequenced(buffer, subtree)
+local function handle_sequenced(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Sequenced packet")
 end
 
 -- Function to handle Unsequenced packets
-local function handle_unsequenced(buffer, subtree)
+local function handle_unsequenced(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Unsequenced packet")
     local packet_type = buffer(0,2):string()
     subtree:add(fields.packet_type, buffer(0, 2))
@@ -42,15 +46,15 @@ local function handle_unsequenced(buffer, subtree)
     elseif packet_type == "NR" then
         process_new_order_response(buffer, subtree)
     else
-        subtree:add_proto_expert_info(e_unexpected_packet_type, "Unexpected unsequenced packet type: " .. packet_type)
+        subtree:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
         return false -- Indicate error
     end
     return true -- Indicate success
 end
 
 local function handle_login(buffer, subtree, offset, packet_length)  
-    local login_data = buffer(offset, packet_length-2)
-    subtree:add(ESesM.fields.f_login_data, login_data)
+    local data = buffer(offset, packet_length-2)
+    subtree:add(ESesM.fields.f_login, data)
     offset = offset + 1
 
     subtree:add(ESesM.fields.f_version, buffer(offset, 5))
@@ -65,39 +69,52 @@ local function handle_login(buffer, subtree, offset, packet_length)
     offset = offset + 1
 end
 
-local function handle_login_response(buffer, subtree)
-    subtree:add(e_info_message, "Login Response")
+local function handle_login_response(buffer, subtree, offset, packet_length)
+    local data = buffer(offset, packet_length-2)
+    subtree:add(ESesM.fields.f_login_response, data)
+    offset = offset + 1
+    subtree:add_le(ESesM.fields.f_number_of_matching_engines, buffer(offset, 1))    
+    offset = offset + 1
+
+    local status = buffer(offset,1):string()
+    if status == " " then
+        subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
+    else
+        local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
+        item:add_proto_expert_info(e_undecoded)
+    end
+    offset = offset + 1
 end
 
-local function handle_synchronization_complete(buffer, subtree)
+local function handle_synchronization_complete(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Synchronization_complete")
 end
 
-local function handle_retransmission_request(buffer, subtree)
+local function handle_retransmission_request(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Retransmission_request")
 end
 
-local function handle_logout(buffer, subtree)
+local function handle_logout(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Logout")
 end
 
-local function handle_goodbye(buffer, subtree)
+local function handle_goodbye(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Goodbye")
 end
 
-local function handle_session_update(buffer, subtree)
+local function handle_session_update(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Session Update")
 end
 
-local function handle_server_heartbeat(buffer, subtree)
+local function handle_server_heartbeat(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Server Heartbeat")
 end
 
-local function handle_client_heartbeat(buffer, subtree)
+local function handle_client_heartbeat(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Client Heartbeat")
 end
 
-local function handle_test(buffer, subtree)
+local function handle_test(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Test")
 end
 
@@ -124,31 +141,31 @@ function ESesM.dissector(buffer, pinfo, tree)
 
     local packet_type = buffer(2,1):string()
     if packet_type == "s" then
-        handle_sequenced(buffer, subtree)
+        handle_sequenced(buffer, subtree, offset, packet_length)
     elseif packet_type == "U" then
-        handle_unsequenced(buffer, subtree)
+        handle_unsequenced(buffer, subtree, offset, packet_length)
     elseif packet_type == "l" then
         handle_login(buffer, subtree, offset, packet_length)
     elseif packet_type == "r" then
-        handle_login_response(buffer, subtree)
+        handle_login_response(buffer, subtree, offset, packet_length)
     elseif packet_type == "c" then
-        handle_synchronization_complete(buffer, subtree)
+        handle_synchronization_complete(buffer, subtree, offset, packet_length)
     elseif packet_type == "a" then
-        handle_retransmission_request(buffer, subtree)
+        handle_retransmission_request(buffer, subtree, offset, packet_length)
     elseif packet_type == "X" then
-        handle_logout(buffer, subtree)
+        handle_logout(buffer, subtree, offset, packet_length)
     elseif packet_type == "G" then
-        handle_goodbye(buffer, subtree)
+        handle_goodbye(buffer, subtree, offset, packet_length)
     elseif packet_type == "u" then
-        handle_session_update(buffer, subtree)
+        handle_session_update(buffer, subtree, offset, packet_length)
     elseif packet_type == "0" then
-        handle_server_heartbeat(buffer, subtree)
+        handle_server_heartbeat(buffer, subtree, offset, packet_length)
     elseif packet_type == "1" then
-        handle_client_heartbeat(buffer, subtree)
+        handle_client_heartbeat(buffer, subtree, offset, packet_length)
     elseif packet_type == "T" then
-        handle_test(buffer, subtree)
+        handle_test(buffer, subtree, offset, packet_length)
     else
-        subtree:add_proto_expert_info(e_unexpected_packet_type, "Unknown packet type: " .. packet_type)
+        subtree:add_proto_expert_info(e_undecoded, "Unknown packet type: " .. packet_type)
     end
 end
 
