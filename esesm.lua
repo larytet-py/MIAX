@@ -59,6 +59,7 @@ ESesM.fields.matching_engine_id = ProtoField.uint8("ESesM.matching_engine_id", "
 ESesM.fields.meo_version = ProtoField.string("ESesM.meo_version", "MEO version", base.ASCII)
 ESesM.fields.session_id = ProtoField.uint8("ESesM.session_id", "Session ID", base.DEC)
 ESesM.fields.system_status = ProtoField.string("ESesM.system_status", "System status", base.ASCII)
+ESesM.fields.ticker_symbol = ProtoField.string("ESesM.ticker_symbol", "Ticker symbol", base.ASCII)
 
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
@@ -393,6 +394,12 @@ local function process_reserve_replenishment_notification(buffer, subtree, offse
 end
 
 local function process_symbol_update(buffer, subtree, offset, packet_length)
+    subtree:add_le(ESesM.fields.matching_engine_time, buffer(offset, 8))
+    offset = offset + 8  
+    subtree:add(ESesM.fields.symbol_id, buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.ticker_symbol, buffer(offset, 11))
+    offset = offset + 11
 end
 
 
