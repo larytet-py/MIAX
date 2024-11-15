@@ -55,13 +55,13 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 8
     subtree:add(ESesM.fields.f_client_order_id, buffer(offset, 20))
     offset = offset + 20
-    subtree:add(ESesM.fields.f_symbol_id, buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_symbol_id, buffer(offset, 4))
     offset = offset + 4
     subtree:add(ESesM.fields.f_price, buffer(offset, 8))
     offset = offset + 8
-    subtree:add(ESesM.fields.f_size, buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_size, buffer(offset, 4))
     offset = offset + 4
-    subtree:add(ESesM.fields.f_order_instructions, buffer(offset, 2))
+    subtree:add_le(ESesM.fields.f_order_instructions, buffer(offset, 2))
     offset = offset + 2
     subtree:add(ESesM.fields.f_time_in_force, buffer(offset, 1))
     offset = offset + 1
@@ -69,11 +69,11 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 1
     subtree:add(ESesM.fields.f_price_sliding, buffer(offset, 1))
     offset = offset + 1
-    subtree:add(ESesM.fields.f_self_trade_protection, buffer(offset, 1))
+    subtree:add_le(ESesM.fields.f_self_trade_protection, buffer(offset, 1))
     offset = offset + 1
     subtree:add(ESesM.fields.f_self_trade_protection_group, buffer(offset, 1))
     offset = offset + 1
-    subtree:add(ESesM.fields.f_routing, buffer(offset, 1))
+    subtree:add_le(ESesM.fields.f_routing, buffer(offset, 1))
     offset = offset + 1
     subtree:add(ESesM.fields.f_collar_dollar_value, buffer(offset, 8))
     offset = offset + 8
@@ -83,11 +83,11 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 16
     subtree:add(ESesM.fields.f_clearing_account buffer(offset, 4))
     offset = offset + 4
-    subtree:add(ESesM.fields.f_min_qty buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_min_qty buffer(offset, 4))
     offset = offset + 4
-    subtree:add(ESesM.fields.f_max_floor_qty buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_max_floor_qty buffer(offset, 4))
     offset = offset + 4
-    subtree:add(ESesM.fields.f_display_range_qty buffer(offset, 4))
+    subtree:add_le(ESesM.fields.f_display_range_qty buffer(offset, 4))
     offset = offset + 4
     subtree:add(ESesM.fields.f_peg_offset buffer(offset, 8))
     offset = offset + 8
