@@ -9,8 +9,8 @@ ESesM.fields.f_username = ProtoField.string("ESesM.username", "Username")
 ESesM.fields.f_computer_id = ProtoField.string("ESesM.computer_id", "Computer ID") 
 ESesM.fields.f_application_protocol = ProtoField.string("ESesM.application_protocol", "Application protocol") 
 ESesM.fields.f_number_of_matching_engines = ProtoField.uint16("ESesM.matching_engines", "Matching Engines") 
-ESesM.fields.f_status_code = ProtoField.uint8("ESesM.status_code", "Status Code", base.DEC)
-ESesM.fields.f_status_code_ok = ProtoField.uint8("ESesM.status_code", "Status Code OK", base.DEC)
+ESesM.fields.f_status_code = ProtoField.string("ESesM.status_code", "Status Code", base.ASCII)
+ESesM.fields.f_status_code_ok = ProtoField.string("ESesM.status_code", "Status Code OK", base.ASCII)
 ESesM.fields.f_synchronization_complete = ProtoField.bytes("ESesM.synchronization_complete", "Synchronization Complete")
 ESesM.fields.f_unsequenced_packet = ProtoField.bytes("ESesM.unsequenced_packet", "Unsequenced packet")
 ESesM.fields.f_sequenced_packet = ProtoField.bytes("ESesM.sequenced_packet", "sequenced packet")
@@ -61,6 +61,78 @@ function number_to_binary_str(num, bits)
     return table.concat(t)
 end
 
+local status_descriptions = {
+    [" "] = "Successful",
+    ["A"] = "Duplicate Client Order ID",
+    ["B"] = "Not in Live Order Window",
+    ["C"] = "Matching Engine is not available",
+    ["D"] = "Duplicate Order Check rejected",
+    ["E"] = "Exceeded Test Symbol throttle",
+    ["F"] = "ISO orders not allowed",
+    ["G"] = "Invalid Self Trade Protection Group or its use",
+    ["H"] = "Blocked by MEO user",
+    ["I"] = "Invalid MPID",
+    ["J"] = "Invalid Price",
+    ["K"] = "Invalid Size",
+    ["L"] = "Blocked by Firm over MIAX Member Firm Portal or by Helpdesk",
+    ["M"] = "Exceeded max allowed size",
+    ["N"] = "Exceeded max notional value",
+    ["O"] = "Invalid Client Order ID",
+    ["P"] = "Request is not permitted for this session",
+    ["Q"] = "Short sale orders not allowed",
+    ["R"] = "Blocked by Cumulative Risk Metrics",
+    ["S"] = "Invalid Symbol ID",
+    ["T"] = "Invalid Order Type",
+    ["U"] = "Invalid use of Locate Required",
+    ["V"] = "Invalid Sell Short",
+    ["W"] = "Limit Order Price Protection",
+    ["X"] = "MPID not permitted",
+    ["Y"] = "ISO attribute not compatible with the order type",
+    ["Z"] = "Undefined reason",
+    ["a"] = "Invalid Capacity",
+    ["b"] = "Invalid Time in Force",
+    ["c"] = "Invalid Routing Instruction or its use",
+    ["d"] = "Invalid Self Trade Protection Level",
+    ["e"] = "Invalid Self Trade Protection Instruction or its use",
+    ["f"] = "Invalid Attributable value or use",
+    ["g"] = "Invalid Price Sliding and Re-Price Frequency value or use",
+    ["h"] = "Invalid use of Post Only instruction",
+    ["i"] = "Invalid use of Display instruction",
+    ["j"] = "Invalid value or use for Available when Locked Instruction",
+    ["k"] = "Market Order Price Protection",
+    ["l"] = "Invalid Routing Strategy or its use",
+    ["m"] = "Invalid value in Account field",
+    ["n"] = "Invalid value in Clearing Account field",
+    ["o"] = "Invalid use of Trading Collar Dollar Value",
+    ["p"] = "Invalid for current Symbol Trading Status",
+    ["q"] = "Primary Exchange IPO Not Complete/IPO in Progress",
+    ["r"] = "Invalid use of MinQty size or MinQty Exec Type instruction",
+    ["s"] = "Invalid use of Order Type",
+    ["t"] = "Invalid MaxFloor Qty",
+    ["u"] = "Invalid Display Range Qty",
+    ["v"] = "Feature not Available",
+    ["w"] = "Primary Listing Market routing not supported",
+    ["x"] = "Too late for Primary Listing Market order",
+    ["y"] = "PAC Orders are not allowed, routing to Primary Listing Market disabled",
+    ["z"] = "Short sale exempt orders not allowed",
+    ["0"] = "Limit price more aggressive than Market Impact Collar",
+    ["1"] = "Market Orders not allowed",
+    ["2"] = "Restricted security not allowed",
+    ["3"] = "Blocked by Order Rate Metrics",
+    ["4"] = "Average Daily Volume Protection",
+    ["5"] = "Invalid offset for Primary Peg Order",
+    ["6"] = "Invalid Purge Group specified",
+    ["7"] = "Invalid or Not Permitted value in Locate Account field",
+    ["8"] = "Blocked by Drop Copy ACOD event",
+    ["9"] = "Blocked by Drop Copy ACOSF event",
+    ["!"] = "Invalid use of 'Cancel Order if not a NBBO Setter' order instruction",
+    ["*"] = "Downgraded from older version"
+}
+
+function get_error_description(code)
+    return status_descriptions[code] or "Unknown status code"
+end
+
 local function process_status(buffer, subtree, offset)
     local status = buffer(offset, 1):string()
 
@@ -68,7 +140,7 @@ local function process_status(buffer, subtree, offset)
         subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
     else
         local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
-        item:add_proto_expert_info(e_undecoded, "Status not OK")
+        item:add_proto_expert_info(e_undecoded, get_error_description(status))
     end
 end
 
