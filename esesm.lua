@@ -40,7 +40,7 @@ end
 local function handle_unsequenced(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Unsequenced packet")
     local packet_type = buffer(0,2):string()
-    subtree:add(fields.packet_type, buffer(0, 2))
+    subtree:add(ESesM.fields.packet_type, buffer(0, 2))
 
     if packet_type == "N1" then
         process_new_order(buffer, subtree)
