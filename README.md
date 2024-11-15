@@ -6,10 +6,10 @@ In Linux it can be `/home/$USER/.local/lib/wireshark/plugins`
 Creeate a hard link to the LUA script
 ```
 mkdir -p /home/$USER/.local/lib/wireshark/plugins
-ln  miax.lua /home/$USER/.local/lib/wireshark/plugins/miax.lua
+ln  esesm.lua /home/$USER/.local/lib/wireshark/plugins/esesm.lua
 ```
 
-If needed enable LUA support in _Edit->Preferences->Lua_. In the _About->Plugins_ look for `miax`. Reload the plugin _Analyze->Relaod LUA Plugins_.
+If needed enable LUA support in _Edit->Preferences->Lua_ or in the `~/.local/lib/wireshark/init.lua` . In the _About->Plugins_ look for `miax`. Reload the plugin _Analyze->Relaod LUA Plugins_.
 See _To0ols_LUA_Console_ for debug output.
 
 

@@ -1,5 +1,7 @@
+print("Lua scripting is enabled in Wireshark!")
+
 -- Define the protocol
-local ESesM = Proto("ESesM", "MIAX ESesM protocol")
+local ESesM = Proto("ESesM", "MIAX ESesM Protocol")
 
 -- Define the protocol fields
 local f = ESesM.fields
@@ -13,9 +15,9 @@ function ESesM.dissector(buffer, pinfo, tree)
 
     -- Add protocol details to the tree
     local subtree = tree:add(ESesM, buffer(), "MIAX ESesM Protocol Data")
-    
+
     -- Ensure there's enough data
-    if buffer:len() < 5 then
+    if buffer:len() < 500000 then
         subtree:add_expert_info(PI_MALFORMED, PI_ERROR, "Packet is too short")
         return
     end
@@ -25,7 +27,7 @@ function ESesM.dissector(buffer, pinfo, tree)
     subtree:add(f.packet_type, buffer(4, 1)) -- Next byte: packet type
 end
 
--- Register the protocol dissector to a port
+-- Register the protocol dissector to a specific port
 local tcp_dissector_table = DissectorTable.get("tcp.port")
 tcp_dissector_table:add(41010, ESesM)
 
