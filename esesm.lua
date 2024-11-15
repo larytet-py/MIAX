@@ -12,9 +12,9 @@ ESesM.fields.f_application_protocol = ProtoField.string("ESesM.application_proto
 ESesM.fields.f_number_of_matching_engines = ProtoField.uint16("ESesM.matching_engines", "Matching Engines") 
 ESesM.fields.f_status_code = ProtoField.uint8("ESesM.status_code", "Status Code", base.DEC)
 ESesM.fields.f_status_code_ok = ProtoField.uint8("ESesM.status_code", "Status Code OK", base.DEC)
-ESesM.fields.f_synchronization_complete = ProtoField.uint8("ESesM.synchronization_complete", "Synchronization Complete", base.DEC)
-ESesM.fields.f_unsequenced_packet = ProtoField.uint8("ESesM.unsequenced_packet", "Unsequenced packet", base.DEC)
-ESesM.fields.f_sequenced_packet = ProtoField.uint8("ESesM.sequenced_packet", "sequenced packet", base.DEC)
+ESesM.fields.f_synchronization_complete = ProtoField.bytes("ESesM.synchronization_complete", "Synchronization Complete")
+ESesM.fields.f_unsequenced_packet = ProtoField.bytes("ESesM.unsequenced_packet", "Unsequenced packet")
+ESesM.fields.f_sequenced_packet = ProtoField.bytes("ESesM.sequenced_packet", "sequenced packet")
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
@@ -31,7 +31,6 @@ end
 local function process_new_order_response(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "NR New order response")
 end
-
 
 -- Function to handle Sequenced packets
 local function handle_sequenced(buffer, subtree, offset, packet_length)
