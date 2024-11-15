@@ -61,7 +61,7 @@ function number_to_binary_str(num, bits)
     return table.concat(t)
 end
 
-local status_descriptions = {
+local new_order_status_descriptions = {
     [" "] = "Successful",
     ["A"] = "Duplicate Client Order ID",
     ["B"] = "Not in Live Order Window",
@@ -129,18 +129,45 @@ local status_descriptions = {
     ["*"] = "Downgraded from older version"
 }
 
-function get_error_description(code)
-    return status_descriptions[code] or "Unknown status code"
+local login_status_descriptions = {
+    [" "] = "Successful",
+    ["S"] = "Invalid trading session requested for the Matching Engine",
+    ["N"] = "Invalid start sequence number requested for the Matching Engine",
+    ["U"] = "No active trading session exists for the Matching Engine, Matching Engine unavailable",
+    ["X"] = "Rejected: Invalid Username/Computer ID combination",
+    ["I"] = "Incompatible Session protocol version",
+    ["A"] = "Incompatible Application protocol version",
+    ["C"] = "Invalid Number of Matching Engines specified in Login Request",
+    ["L"] = "Request rejected because client already logged in"
+}
+
+function get_login_error_description(code)
+    return login_status_descriptions[code] or "Unknown status code"
 end
 
-local function process_status(buffer, subtree, offset)
+function get_new_order_error_description(code)
+    return new_order_status_descriptions[code] or "Unknown status code"
+end
+
+local function process_status_login(buffer, subtree, offset)
     local status = buffer(offset, 1):string()
 
     if status == " " then
         subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
     else
         local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
-        item:add_proto_expert_info(e_undecoded, get_error_description(status))
+        item:add_proto_expert_info(e_undecoded, get_login_error_description(status))
+    end
+end
+
+local function process_status_new_order(buffer, subtree, offset)
+    local status = buffer(offset, 1):string()
+
+    if status == " " then
+        subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
+    else
+        local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
+        item:add_proto_expert_info(e_undecoded, get_new_order_error_description(status))
     end
 end
 
@@ -160,7 +187,7 @@ local function process_new_order_response(buffer, subtree, offset, packet_length
     offset = offset + 8
     subtree:add_le(ESesM.fields.f_size, buffer(offset, 4))
     offset = offset + 4
-    process_status(buffer, subtree, offset)
+    process_status_new_order(buffer, subtree, offset)
     offset = offset + 1
     subtree:add(ESesM.fields.f_reserved, buffer(offset, 10))
     offset = offset + 10
@@ -289,7 +316,7 @@ local function handle_login_response(buffer, subtree, offset, packet_length)
     end
     offset = offset + 1
 
-    process_status(buffer, subtree, offset)
+    process_status_login(buffer, subtree, offset)
     offset = offset + 1
 end
 
