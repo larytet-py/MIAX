@@ -16,6 +16,31 @@ ESesM.fields.f_unsequenced_packet = ProtoField.bytes("ESesM.unsequenced_packet",
 ESesM.fields.f_sequenced_packet = ProtoField.bytes("ESesM.sequenced_packet", "sequenced packet")
 ESesM.fields.f_new_order = ProtoField.string("ESesM.new_order", "New Order", base.ASCII)
 ESesM.fields.f_new_order_response = ProtoField.string("ESesM.new_order_response", "New Order response", base.ASCII)
+ESesM.fields.f_reserved = ProtoField.bytes("ESesM.reserved", "Reserved")
+ESesM.fields.f_mpid = ProtoField.string("ESesM.mpid", "MPID", base.ASCII)
+ESesM.fields.f_client_order_id = ProtoField.string("ESesM.client_oder_id", "Client Orderr ID", base.ASCII)
+ESesM.fields.f_symbol_id = ProtoField.bytes("ESesM.symbol_id", "Symbol ID")
+ESesM.fields.f_price = ProtoField.bytes("ESesM.price", "Price")
+ESesM.fields.f_size = ProtoField.uint32("ESesM.size", "Size", base.DEC)
+ESesM.fields.f_order_instructions = ProtoField.uint16("ESesM.size", "Size", base.DEC)
+ESesM.fields.f_time_in_force = ProtoField.string("ESesM.time_in_force", "Time in force", base.ASCII)
+ESesM.fields.f_order_type = ProtoField.string("ESesM.order_type", "Order type", base.ASCII)
+ESesM.fields.f_price_sliding, buffer(offset, 1))
+ESesM.fields.f_sell_trade_protection, buffer(offset, 1))
+ESesM.fields.f_sell_trade_protection_group, buffer(offset, 1))
+ESesM.fields.f_collar_dollar_value, buffer(offset, 8))
+ESesM.fields.f_capacity, buffer(offset, 1))
+ESesM.fields.f_account buffer(offset, 16))
+ESesM.fields.f_clearing_account buffer(offset, 4))
+ESesM.fields.f_min_qty buffer(offset, 4))
+ESesM.fields.f_max_floor_qty buffer(offset, 4))
+ESesM.fields.f_display_range_qty buffer(offset, 4))
+ESesM.fields.f_peg_offset buffer(offset, 8))
+ESesM.fields.f_locate_account buffer(offset, 4))
+ESesM.fields.f_purge_group buffer(offset, 1))
+ESesM.fields.reserved buffer(offset, 19))
+
+
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
@@ -25,6 +50,52 @@ ESesM.experts = { e_undecoded, e_packet_too_short }
 
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree, offset, packet_length)
+    subtree:add(ESesM.fields.f_reserved, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_mpid, buffer(offset, 4))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_client_order_id, buffer(offset, 20))
+    offset = offset + 20
+    subtree:add(ESesM.fields.f_symbol_id, buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_price, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_size, buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_order_instructions, buffer(offset, 2))
+    offset = offset + 2
+    subtree:add(ESesM.fields.f_time_in_force, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_order_type, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_price_sliding, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_sell_trade_protection, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_sell_trade_protection_group, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_collar_dollar_value, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_capacity, buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_account buffer(offset, 16))
+    offset = offset + 16
+    subtree:add(ESesM.fields.f_clearing_account buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_min_qty buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_max_floor_qty buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_display_range_qty buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_peg_offset buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_locate_account buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_purge_group buffer(offset, 1))
+    offset = offset + 1
+    subtree:add(ESesM.fields.reserved buffer(offset, 19))
+    offset = offset + 19
 end
 
 -- Function to process New Order Response (NR)
@@ -46,11 +117,13 @@ local function handle_unsequenced(buffer, subtree, offset, packet_length)
 
     local packet_type = buffer(offset, 2):string()
     if packet_type == "N1" then
+        offset = offset + 2
         subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
-        process_new_order(buffer, subtree)
+        process_new_order(buffer, subtree, offset, packet_length)
     elseif packet_type == "NR" then
+        offset = offset + 2
         subtree:add(ESesM.fields.f_new_order_response, buffer(offset, packet_length-offset))
-        process_new_order_response(buffer, subtree)
+        process_new_order_response(buffer, subtree, offset, packet_length)
     else
         local item = subtree:add(ESesM.fields.f_new_order, buffer(offset, packet_length-offset))
         item:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
