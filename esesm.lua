@@ -11,18 +11,23 @@ ESesM.experts = { e_unexpected_packet_type, e_packet_too_short }
 
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree)
-    subtree:add(f.new_field1, buffer(2, 4))
-    subtree:add(f.new_field2, buffer(6, 2))
+    subtree:add_proto_expert_info("N1 New order")
 end
 
 -- Function to process New Order Response (NR)
 local function process_new_order_response(buffer, subtree)
-    subtree:add(f.response_field1, buffer(2, 2))
-    subtree:add(f.response_field2, buffer(4, 4))
+    subtree:add_proto_expert_info("NR New order response")
 end
 
--- Function to check and add the packet type
-local function check_and_add_packet_type(buffer, subtree, fields)
+
+-- Function to handle Sequenced packets
+local function handle_sequenced_packet(buffer, subtree)
+    subtree:add_proto_expert_info("Sequenced packet")
+end
+
+-- Function to handle Unsequenced packets
+local function handle_unsequenced_packet(buffer, subtree)
+    subtree:add_proto_expert_info("Unsequenced packet")
     local packet_type = buffer(0,2):string()
     subtree:add(fields.packet_type, buffer(0, 2))
 
@@ -31,7 +36,7 @@ local function check_and_add_packet_type(buffer, subtree, fields)
     elseif packet_type == "NR" then
         process_new_order_response(buffer, subtree)
     else
-        subtree:add_proto_expert_info(e_unexpected_packet_type, "Unexpected packet type: " .. packet_type)
+        subtree:add_proto_expert_info(e_unexpected_packet_type, "Unexpected unsequenced packet type: " .. packet_type)
         return false -- Indicate error
     end
     return true -- Indicate success
@@ -46,13 +51,19 @@ function ESesM.dissector(buffer, pinfo, tree)
     local subtree = tree:add(ESesM, buffer(), "MIAX ESesM Protocol Data")
 
     -- Ensure there's enough data
-    if buffer:len() < 2 then
+    local length = buffer(0,2):uint()
+    if length < 3 then
         subtree:add_proto_expert_info(e_packet_too_short, "Packet is too short")
         return
     end
 
-    if not check_and_add_packet_type(buffer, subtree, f) then
-        return
+    local packet_type = buffer(2,1):string()
+    if packet_type == "s" then
+        handle_sequenced_packet(buffer, subtree)
+    elseif packet_type == "U" then
+        handle_unsequenced_packet(buffer, subtree)
+    else
+        subtree:add_proto_expert_info(e_unexpected_packet_type, "Unknown packet type: " .. packet_type)
     end
 end
 
