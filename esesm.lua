@@ -2,7 +2,13 @@
 local ESesM = Proto("ESesM", "MIAX ESesM")
 ESesM.fields.packet_type = ProtoField.string("ESesM.packet_type", "Packet Type", base.ASCII)
 ESesM.fields.f_packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
+
 ESesM.fields.f_login_data = ProtoField.bytes("ESesM.login_data", "Login Data")
+ESesM.fields.f_version = ProtoField.string("ESesM.version", "Version")
+ESesM.fields.f_username = ProtoField.string("ESesM.username", "Username")
+ESesM.fields.f_computer_id = ProtoField.string("ESesM.computer_id", "Computer ID") 
+ESesM.fields.f_application_protocol = ProtoField.string("ESesM.application_protocol", "Application protocol") 
+
 
 local e_unexpected_packet_type = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
@@ -41,12 +47,19 @@ local function handle_unsequenced(buffer, subtree)
     return true -- Indicate success
 end
 
-local function handle_login(buffer, subtree, offset)  
-    subtree:add_le(ESesM.fields.f_packet_length, buffer(offset, 2))
-
-    local packet_length = buffer(offset, 2):le_uint()
-    local login_data = buffer(offset + 2, packet_length-2)
+local function handle_login(buffer, subtree, offset, packet_length)  
+    local login_data = buffer(offset, packet_length-2)
     subtree:add(ESesM.fields.f_login_data, login_data)
+    offset = offset + 1
+
+    subtree:add(ESesM.fields.f_version, buffer(offset, 5))
+    offset = offset + 5
+    subtree:add(ESesM.fields.f_username, buffer(offset, 5))
+    offset = offset + 5
+    subtree:add(ESesM.fields.f_computer_id, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_application_protocol, buffer(offset, 8))    
+    offset = offset + 8
 end
 
 local function handle_login_response(buffer, subtree)
@@ -100,13 +113,19 @@ function ESesM.dissector(buffer, pinfo, tree)
         return
     end
 
+    local offset = 0
+    subtree:add_le(ESesM.fields.f_packet_length, buffer(offset, 2))
+    local packet_length = buffer(offset, 2):le_uint()
+    offset = offset + 2
+
+
     local packet_type = buffer(2,1):string()
     if packet_type == "s" then
         handle_sequenced(buffer, subtree)
     elseif packet_type == "U" then
         handle_unsequenced(buffer, subtree)
     elseif packet_type == "l" then
-        handle_login(buffer, subtree, 0)
+        handle_login(buffer, subtree, offset, packet_length)
     elseif packet_type == "r" then
         handle_login_response(buffer, subtree)
     elseif packet_type == "c" then
