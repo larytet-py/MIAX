@@ -659,7 +659,7 @@ local function handle_test(buffer, subtree, offset, packet_length)
     subtree:add(e_info_message, "Test")
 end
 
--- Dissector function
+-- Dissector entry point
 function ESesM.dissector(buffer, pinfo, tree)
     -- Set protocol name in the packet list
     pinfo.cols.protocol = "ESesM"
