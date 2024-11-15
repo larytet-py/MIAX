@@ -40,6 +40,8 @@ ESesM.fields.f_display_range_qty = ProtoField.uint32("ESesM.display_range_qty", 
 ESesM.fields.f_peg_offset = ProtoField.bytes("ESesM.peg_offset", "Peg offset")
 ESesM.fields.f_locate_account = ProtoField.string("ESesM.locate_account", "Locate Account", base.ASCII)
 ESesM.fields.f_purge_group = ProtoField.string("ESesM.purge_group", "Purge group", base.ASCII)
+ESesM.fields.f_matching_engine_time = ProtoField.uint32("ESesM.matching_engine_time", "Matching engine time", base.DEC)
+ESesM.fields.f_order_id = ProtoField.uint32("ESesM.order_id", "Order ID", base.DEC)
 
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
@@ -57,6 +59,39 @@ function number_to_binary_str(num, bits)
         t[#t + 1] = (rest % 2 == 1) and "1" or "0"
     end
     return table.concat(t)
+end
+
+local function process_status(buffer, subtree, offset)
+    local status = buffer(offset, 1):string()
+
+    if status == " " then
+        subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
+    else
+        local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
+        item:add_proto_expert_info(e_undecoded, "Status not OK")
+    end
+end
+
+-- Function to process New Order Response (NR)
+local function process_new_order_response(buffer, subtree, offset, packet_length)
+    subtree:add(ESesM.fields.f_matching_engine_time, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_mpid, buffer(offset, 4))
+    offset = offset + 4
+    subtree:add(ESesM.fields.f_client_order_id, buffer(offset, 20))
+    offset = offset + 20
+    subtree:add_le(ESesM.fields.f_symbol_id, buffer(offset, 4))
+    offset = offset + 4
+    subtree:add_le(ESesM.fields.f_order_id, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add(ESesM.fields.f_price, buffer(offset, 8))
+    offset = offset + 8
+    subtree:add_le(ESesM.fields.f_size, buffer(offset, 4))
+    offset = offset + 4
+    process_status(buffer, subtree, offset)
+    offset = offset + 1
+    subtree:add(ESesM.fields.f_reserved, buffer(offset, 10))
+    offset = offset + 10
 end
 
 -- Function to process New Order (N1)
@@ -121,18 +156,12 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 19
 end
 
--- Function to process New Order Response (NR)
-local function process_new_order_response(buffer, subtree, offset, packet_length)
-end
-
--- Function to handle Sequenced packets
 local function handle_sequenced(buffer, subtree, offset, packet_length)
     local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.f_sequenced_packet, data)
     offset = offset + 1
 end
 
--- Function to handle Unsequenced packets
 local function handle_unsequenced(buffer, subtree, offset, packet_length)
     local data = buffer(offset, packet_length-offset)
     subtree:add(ESesM.fields.f_unsequenced_packet, data)
@@ -188,13 +217,7 @@ local function handle_login_response(buffer, subtree, offset, packet_length)
     end
     offset = offset + 1
 
-    local status = buffer(offset,1):string()
-    if status == " " then
-        subtree:add(ESesM.fields.f_status_code_ok, buffer(offset, 1))
-    else
-        local item = subtree:add(ESesM.fields.f_status_code, buffer(offset, 1))
-        item:add_proto_expert_info(e_undecoded, "Not Ok")
-    end
+    process_status(buffer, subtree, offset)
     offset = offset + 1
 end
 
