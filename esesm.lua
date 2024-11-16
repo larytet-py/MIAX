@@ -1,65 +1,86 @@
-local ESesM = Proto("ESesM", "MIAX ESesM")
+local baseName = "ESesM"
+local ESesM = Proto(baseName, "MIAX " .. baseName)
 
--- Declare all possible protocol fields as required by Wireshark
-ESesM.fields.packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
-ESesM.fields.login = ProtoField.bytes("ESesM.login", "Login")
-ESesM.fields.login_response = ProtoField.bytes("ESesM.login_response", "Login Response")
-ESesM.fields.version = ProtoField.string("ESesM.version", "Version")
-ESesM.fields.username = ProtoField.string("ESesM.username", "Username")
-ESesM.fields.computer_id = ProtoField.string("ESesM.computer_id", "Computer ID") 
-ESesM.fields.application_protocol = ProtoField.string("ESesM.application_protocol", "Application protocol") 
-ESesM.fields.number_of_matching_engines = ProtoField.uint16("ESesM.matching_engines", "Matching Engines") 
-ESesM.fields.status_code = ProtoField.string("ESesM.status_code", "Status Code", base.ASCII)
-ESesM.fields.status_code_ok = ProtoField.string("ESesM.status_code", "Status Code OK", base.ASCII)
-ESesM.fields.synchronization_complete = ProtoField.bytes("ESesM.synchronization_complete", "Synchronization Complete")
-ESesM.fields.unsequenced_packet = ProtoField.bytes("ESesM.unsequenced_packet", "Unsequenced packet")
-ESesM.fields.sequenced_packet = ProtoField.bytes("ESesM.sequenced_packet", "sequenced packet")
-ESesM.fields.new_order = ProtoField.string("ESesM.new_order", "New Order", base.ASCII)
-ESesM.fields.new_order_response = ProtoField.string("ESesM.new_order_response", "New Order response", base.ASCII)
-ESesM.fields.reserved = ProtoField.bytes("ESesM.reserved", "Reserved")
-ESesM.fields.reserved_1 = ProtoField.bytes("ESesM.reserved_1", "Reserved")
-ESesM.fields.mpid = ProtoField.string("ESesM.mpid", "MPID", base.ASCII)
-ESesM.fields.client_order_id = ProtoField.string("ESesM.client_oder_id", "Client Orderr ID", base.ASCII)
-ESesM.fields.symbol_id = ProtoField.bytes("ESesM.symbol_id", "Symbol ID")
-ESesM.fields.price = ProtoField.bytes("ESesM.price", "Price")
-ESesM.fields.size = ProtoField.uint32("ESesM.size", "Size", base.DEC)
-ESesM.fields.order_instructions = ProtoField.string("ESesM.order_instructions", "Order instructions", base.ASCII)
-ESesM.fields.time_in_force = ProtoField.string("ESesM.time_in_force", "Time in force", base.ASCII)
-ESesM.fields.order_type = ProtoField.string("ESesM.order_type", "Order type", base.ASCII)
-ESesM.fields.price_sliding = ProtoField.string("ESesM.price_sliding", "Price slidng", base.ASCII)
-ESesM.fields.self_trade_protection = ProtoField.string("ESesM.self_trade_protection", "Self trade protection", base.ASCII)
-ESesM.fields.self_trade_protection_group = ProtoField.string("ESesM.self_trade_protection_group", "Self Trade Protection group", base.ASCII)
-ESesM.fields.routing = ProtoField.uint8("ESesM.routing", "Routing", base.DEC)
-ESesM.fields.collar_dollar_value = ProtoField.bytes("ESesM.collar_dollar_value", "Collar dollar value")
-ESesM.fields.capacity = ProtoField.string("ESesM.capacity", "Capacity", base.ASCII)
-ESesM.fields.account = ProtoField.string("ESesM.account", "Account", base.ASCII)
-ESesM.fields.clearing_account = ProtoField.string("ESesM.clearing_account", "Clearing Account", base.ASCII)
-ESesM.fields.min_qty = ProtoField.uint32("ESesM.min_qty", "Min QTY", base.DEC)
-ESesM.fields.max_floor_qty = ProtoField.uint32("ESesM.min_floor_qty", "Min floor QTY", base.DEC)
-ESesM.fields.display_range_qty = ProtoField.uint32("ESesM.display_range_qty", "Display ange QTY", base.DEC)
-ESesM.fields.peg_offset = ProtoField.bytes("ESesM.peg_offset", "Peg offset")
-ESesM.fields.locate_account = ProtoField.string("ESesM.locate_account", "Locate Account", base.ASCII)
-ESesM.fields.purge_group = ProtoField.string("ESesM.purge_group", "Purge group", base.ASCII)
-ESesM.fields.matching_engine_time = ProtoField.uint64("ESesM.matching_engine_time", "Matching engine time", base.DEC)
-ESesM.fields.order_id = ProtoField.uint32("ESesM.order_id", "Order ID", base.DEC)
-ESesM.fields.modify_order = ProtoField.bytes("ESesM.modify_order", "Modify order")
-ESesM.fields.modify_order_response = ProtoField.bytes("ESesM.modify_order_response", "Mmodify order response")
-ESesM.fields.cancel_order = ProtoField.bytes("ESesM.cancel_order", "Cancel order")
-ESesM.fields.cancel_order_response = ProtoField.bytes("ESesM.cancel_order_response", "Cancel order response")
-ESesM.fields.system_state_notification = ProtoField.bytes("ESesM.system_state_notification", "System state notification")
-ESesM.fields.new_order_notification = ProtoField.bytes("ESesM.new_order_notification", "New_ rder notification")
-ESesM.fields.modify_order_notification = ProtoField.bytes("ESesM.modify_order_notification", "Modify order notification")
-ESesM.fields.cancel_order_notification = ProtoField.bytes("ESesM.cancel_order_notification", "Cancel order notification")
-ESesM.fields.price_update_notification = ProtoField.bytes("ESesM.price_update_notification", "Price update notification")
-ESesM.fields.reserve_replenishment_notification = ProtoField.bytes("ESesM.reserve_replenishment_notification", "Reserve replenishment notification")
-ESesM.fields.symbol_update = ProtoField.bytes("ESesM.symbol_update", "Symbol update")
-ESesM.fields.execution_notification = ProtoField.bytes("ESesM.execution_notification", "Execution notification")
-ESesM.fields.sequence_number = ProtoField.uint64("ESesM.sequence_number", "Sequence number", base.DEC)
-ESesM.fields.matching_engine_id = ProtoField.uint8("ESesM.matching_engine_id", "Matching engine ID", base.DEC)
-ESesM.fields.meo_version = ProtoField.string("ESesM.meo_version", "MEO version", base.ASCII)
-ESesM.fields.session_id = ProtoField.uint8("ESesM.session_id", "Session ID", base.DEC)
-ESesM.fields.system_status = ProtoField.string("ESesM.system_status", "System status", base.ASCII)
-ESesM.fields.ticker_symbol = ProtoField.string("ESesM.ticker_symbol", "Ticker symbol", base.ASCII)
+
+local fields = {
+    packet_length = {"uint16", "Length", base.DEC},
+    login = {"bytes", "Login"},
+    login_response = {"bytes", "Login Response"},
+    version = {"string", "Version"},
+    username = {"string", "Username"},
+    computer_id = {"string", "Computer ID"},
+    application_protocol = {"string", "Application protocol"},
+    number_of_matching_engines = {"uint16", "Matching Engines", base.DEC},
+    status_code = {"string", "Status Code", base.ASCII},
+    status_code_ok = {"string", "Status Code OK", base.ASCII},
+    synchronization_complete = {"bytes", "Synchronization Complete"},
+    unsequenced_packet = {"bytes", "Unsequenced packet"},
+    sequenced_packet = {"bytes", "Sequenced packet"},
+    new_order = {"string", "New Order", base.ASCII},
+    new_order_response = {"string", "New Order response", base.ASCII},
+    reserved = {"bytes", "Reserved"},
+    reserved_1 = {"bytes", "Reserved"},
+    mpid = {"string", "MPID", base.ASCII},
+    client_order_id = {"string", "Client Order ID", base.ASCII},
+    symbol_id = {"bytes", "Symbol ID"},
+    price = {"bytes", "Price"},
+    size = {"uint32", "Size", base.DEC},
+    order_instructions = {"string", "Order instructions", base.ASCII},
+    time_in_force = {"string", "Time in force", base.ASCII},
+    order_type = {"string", "Order type", base.ASCII},
+    price_sliding = {"string", "Price sliding", base.ASCII},
+    self_trade_protection = {"string", "Self trade protection", base.ASCII},
+    self_trade_protection_group = {"string", "Self Trade Protection group", base.ASCII},
+    routing = {"uint8", "Routing", base.DEC},
+    collar_dollar_value = {"bytes", "Collar dollar value"},
+    capacity = {"string", "Capacity", base.ASCII},
+    account = {"string", "Account", base.ASCII},
+    clearing_account = {"string", "Clearing Account", base.ASCII},
+    min_qty = {"uint32", "Min QTY", base.DEC},
+    max_floor_qty = {"uint32", "Min floor QTY", base.DEC},
+    display_range_qty = {"uint32", "Display range QTY", base.DEC},
+    peg_offset = {"bytes", "Peg offset"},
+    locate_account = {"string", "Locate Account", base.ASCII},
+    purge_group = {"string", "Purge group", base.ASCII},
+    matching_engine_time = {"uint64", "Matching engine time", base.DEC},
+    order_id = {"uint32", "Order ID", base.DEC},
+    modify_order = {"bytes", "Modify order"},
+    modify_order_response = {"bytes", "Modify order response"},
+    cancel_order = {"bytes", "Cancel order"},
+    cancel_order_response = {"bytes", "Cancel order response"},
+    system_state_notification = {"bytes", "System state notification"},
+    new_order_notification = {"bytes", "New order notification"},
+    modify_order_notification = {"bytes", "Modify order notification"},
+    cancel_order_notification = {"bytes", "Cancel order notification"},
+    price_update_notification = {"bytes", "Price update notification"},
+    reserve_replenishment_notification = {"bytes", "Reserve replenishment notification"},
+    symbol_update = {"bytes", "Symbol update"},
+    execution_notification = {"bytes", "Execution notification"},
+    sequence_number = {"uint64", "Sequence number", base.DEC},
+    matching_engine_id = {"uint8", "Matching engine ID", base.DEC},
+    meo_version = {"string", "MEO version", base.ASCII},
+    session_id = {"uint8", "Session ID", base.DEC},
+    system_status = {"string", "System status", base.ASCII},
+    ticker_symbol = {"string", "Ticker symbol", base.ASCII},
+}
+
+local function createFieldId(baseName, fieldName)
+    return baseName .. "." .. fieldName:gsub("_", ".")
+end
+
+-- Declare all possible protocol fields as required by Wireshark.
+-- Initialize all ProtoFields with the dynamically constructed IDs and properties
+-- This is an equivalent of a lof lines like 
+--    ESesM.fields.packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
+for key, val in pairs(fields) do
+    local dtype, desc, base = unpack(val)
+    local fieldId = string.format("%s.%s", baseName, key:gsub("_", "."))
+    if base then
+        ESesM.fields[key] = ProtoField[dtype](fieldId, desc, base)
+    else
+        ESesM.fields[key] = ProtoField[dtype](fieldId, desc)
+    end
+end
 
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
