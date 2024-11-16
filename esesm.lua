@@ -59,7 +59,7 @@ local fields = {
     sequence_number                   = {"uint64", "Sequence number",              base.DEC},
     matching_engine_id                = {"uint8",  "Matching engine ID",           base.DEC},
     meo_version                       = {"string", "MEO version",                  base.ASCII},
-    session_id                        = {"uint8",  "Session ID",                    base.DEC},
+    session_id                        = {"uint8",  "Session ID",                   base.DEC},
     system_status                     = {"string", "System status",                base.ASCII},
     ticker_symbol                     = {"string", "Ticker symbol",                base.ASCII},
 }
