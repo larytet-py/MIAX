@@ -434,6 +434,7 @@ end
 -- Convert the UInt64 userdata to a string
 -- BinaryU Field with the last 6 (right most) digit places being decimal places.
 -- $1.00 is represented as 1,000,000
+-- For example, little endian [34 12 96 51 01 e9 ef 17] = 186910000 or 186.91
 function binaryU_to_price(binaryU)
     local numStr = tostring(binaryU)
     if #numStr > 6 then
