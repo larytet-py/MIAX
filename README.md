@@ -8,7 +8,7 @@ Revision Date: 06/26/2020
 Version 1.0.a
 ```
 
-## How to use
+## Usage
 
 Find the path in the _About->Folders->Personal LUA Plugins_
 In Linux it can be `/home/$USER/.local/lib/wireshark/plugins`
