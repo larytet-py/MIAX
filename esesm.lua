@@ -65,17 +65,17 @@ local fields = {
     ticker_symbol                     = {"string", "Ticker symbol",                base.ASCII},
 
 
-    order_side                        = {"uint16",  "Side",                         base.DEC, {[0] = "Buy", [1] = "Sell"}, 0x01},
-    order_short_sale_indicator        = {"uint16",  "Short Sale Indicator",         base.DEC, {[0] = "Not Applicable", [1] = "Sell Long", [2] = "Sell Short", [3] = "Sell Short Exempt"}, 0x06},
-    order_displayed                   = {"uint16",   "Displayed",                    base.DEC, {[0] = "No", [1] = "Yes"}, 0x08},
-    order_postonly                    = {"uint16",   "PostOnly",                     base.DEC, {[0] = "No", [1] = "Yes"}, 0x10},
-    order_locate_required             = {"uint16",   "Locate Required",              base.DEC, {[0] = "No/Not Applicable", [1] = "Yes"}, 0x20},
-    order_iso                         = {"uint16",   "ISO",                          base.DEC, {[0] = "No", [1] = "Yes"}, 0x40},
-    order_retail_order                = {"uint16",   "Retail Order",                 base.DEC, {[0] = "No", [1] = "Yes"}, 0x80},
-    order_attributable_order          = {"uint16",  "Attributable Order",           base.DEC, {[0] = "No", [1] = "Attributed to Firm MPID", [2] = "Attributed 'RTAL'"}, 0x300},
-    order_minqty_exec_type            = {"uint16",  "MinQty Exec Type",             base.DEC, {[0] = "Not Applicable", [1] = "Only single contra order can fulfill", [2] = "Multiple contra orders can fulfill"}, 0xC00},
-    order_nbbo_setter_cancel          = {"uint16",   "Cancel Order if NOT a NBBO Setter", base.DEC, {[0] = "No", [1] = "Yes"}, 0x1000},
-    order_reserved                    = {"uint16",  "Reserved",                     base.HEX, nil, 0xE000}
+    order_side                        = {"uint16",  "Side",                        base.DEC, {[0] = "Buy", [1] = "Sell"}, 0x01},
+    order_short_sale_indicator        = {"uint16",  "Short Sale Indicator",        base.DEC, {[0] = "Not Applicable", [1] = "Sell Long", [2] = "Sell Short", [3] = "Sell Short Exempt"}, 0x06},
+    order_displayed                   = {"uint16",  "Displayed",                   base.DEC, {[0] = "No", [1] = "Yes"}, 0x08},
+    order_postonly                    = {"uint16",  "PostOnly",                    base.DEC, {[0] = "No", [1] = "Yes"}, 0x10},
+    order_locate_required             = {"uint16",  "Locate Required",             base.DEC, {[0] = "No/Not Applicable", [1] = "Yes"}, 0x20},
+    order_iso                         = {"uint16",  "ISO",                         base.DEC, {[0] = "No", [1] = "Yes"}, 0x40},
+    order_retail_order                = {"uint16",  "Retail Order",                base.DEC, {[0] = "No", [1] = "Yes"}, 0x80},
+    order_attributable_order          = {"uint16",  "Attributable Order",          base.DEC, {[0] = "No", [1] = "Attributed to Firm MPID", [2] = "Attributed 'RTAL'"}, 0x300},
+    order_minqty_exec_type            = {"uint16",  "MinQty Exec Type",            base.DEC, {[0] = "Not Applicable", [1] = "Only single contra order can fulfill", [2] = "Multiple contra orders can fulfill"}, 0xC00},
+    order_nbbo_setter_cancel          = {"uint16",  "Cancel Order if NOT NBBO",    base.DEC, {[0] = "No", [1] = "Yes"}, 0x1000},
+    order_reserved                    = {"uint16",  "Reserved",                    base.HEX, nil, 0xE000}
 }
 
 -- Declare all possible protocol fields as required by Wireshark.
