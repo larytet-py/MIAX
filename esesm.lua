@@ -828,7 +828,7 @@ function ESesM.dissector(buffer, pinfo, tree)
         return
     end
     if  buffer:len() < length then
-        subtree:add_proto_expert_info(e_packet_too_short, "The TCP payload size doesn't fit the packet length")
+        subtree:add_proto_expert_info(e_packet_too_short, string.format("The TCP payload size (%d) < packet length (%d)", buffer:len(), length))
         return
     end
     local offset = 0
