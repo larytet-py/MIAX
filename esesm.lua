@@ -431,6 +431,37 @@ function number_to_binary_str(num, bits)
     return table.concat(t)
 end
 
+-- BinaryU Field with the last 6 (right most) digit places being decimal places.
+-- $1.00 is represented as 1,000,000
+function binaryU_to_price(binaryU)
+    -- Convert the UInt64 userdata to a string
+    local numStr = tostring(binaryU)
+    
+    -- Print the input value
+    print("Input binaryU:", binaryU)
+
+    if #numStr > 6 then
+        local intPart = numStr:sub(1, -7)  -- Get all but the last six digits
+        local decPart = numStr:sub(-6)     -- Get the last six digits
+
+        -- Print the intermediate parts
+        print("Integer part:", intPart)
+        print("Decimal part:", decPart)
+
+        -- Convert to number and print the result before returning
+        local result = tonumber(intPart .. "." .. decPart)
+        print("Return value:", result)
+        return result
+    else
+        -- Handle case where the number is entirely fractional
+        local result = tonumber("0." .. numStr)
+
+        -- Print the result for entirely fractional input
+        print("Return value (fractional):", result)
+        return result
+    end
+end
+
 local function process_status_login(buffer, subtree, offset)
     local status = buffer(offset, 1):string()
 
@@ -518,8 +549,12 @@ local function process_new_order_response(buffer, subtree, offset, packet_length
     offset = offset + 4
     subtree:add_le(ESesM.fields.order_id, buffer(offset, 8))
     offset = offset + 8
-    subtree:add(ESesM.fields.price, buffer(offset, 8))
+
+    local binaryU_value = buffer(offset, 8):le_uint64()
+    local price = binaryU_to_price(binaryU_value)    
+    subtree:add(ESesM.fields.price, buffer(offset, 8), string.format("%.2f", price))
     offset = offset + 8
+
     subtree:add_le(ESesM.fields.size, buffer(offset, 4))
     offset = offset + 4
     process_status_new_order(buffer, subtree, offset)
@@ -561,11 +596,14 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 20
     subtree:add_le(ESesM.fields.symbol_id, buffer(offset, 4))
     offset = offset + 4
-    subtree:add(ESesM.fields.price, buffer(offset, 8))
+
+    local binaryU_value = buffer(offset, 8):le_uint64()
+    local price = binaryU_to_price(binaryU_value)    
+    subtree:add(ESesM.fields.price, buffer(offset, 8), string.format("%.2f", price))
     offset = offset + 8
+
     subtree:add_le(ESesM.fields.size, buffer(offset, 4))
     offset = offset + 4
-
 
     local order_instructions_field = buffer(offset, 2)  -- Read 2 bytes (16 bits)
     local order_instructions_value = order_instructions_field:le_uint()  -- Read 2 bytes (16 bits)
