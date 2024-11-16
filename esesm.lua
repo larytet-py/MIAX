@@ -1,3 +1,4 @@
+local bitop = require("bit32")
 local baseName = "ESesM"
 local ESesM = Proto(baseName, "MIAX " .. baseName)
 
@@ -62,6 +63,19 @@ local fields = {
     session_id                        = {"uint8",  "Session ID",                   base.DEC},
     system_status                     = {"string", "System status",                base.ASCII},
     ticker_symbol                     = {"string", "Ticker symbol",                base.ASCII},
+
+
+    order_side                        = {"string", "Side",                         base.NONE},
+    order_short_sale_indicator        = {"uint8",  "Short Sale Indicator",         base.DEC},  
+    order_displayed                   = {"bool",   "Displayed"},  
+    order_postonly                    = {"bool",   "PostOnly"},  
+    order_locate_required             = {"bool",   "Locate Required"},  
+    order_iso                         = {"bool",   "ISO"},  
+    order_retail_order                = {"bool",   "Retail Order"},  
+    order_attributable_order          = {"uint8",  "Attributable Order",           base.DEC},  
+    order_minqty_exec_type            = {"uint8",  "MinQty Exec Type",             base.DEC},  
+    order_nbbo_setter_cancel          = {"bool",   "Cancel Order if NOT a NBBO Setter"},  
+    order_reserved                    = {"uint8",  "Reserved",                     base.HEX}
 }
 
 local function createFieldId(baseName, fieldName)
@@ -446,6 +460,89 @@ local function process_new_order_response(buffer, subtree, offset, packet_length
     offset = offset + 10
 end
 
+
+local function decode_order_instructions(value)
+    local t = {}
+
+    -- Side
+    t.side = bit32.band(bit32.rshift(value, 0), 0x01)
+    t.side_desc = (t.side == 0) and "Buy" or "Sell"
+
+    -- Short Sale Indicator
+    t.short_sale_indicator = bit32.band(bit32.rshift(value, 1), 0x03)
+    if t.short_sale_indicator == 0 then
+        t.short_sale_indicator_desc = "Not Applicable (when buying)"
+    elseif t.short_sale_indicator == 1 then
+        t.short_sale_indicator_desc = "Sell Long"
+    elseif t.short_sale_indicator == 2 then
+        t.short_sale_indicator_desc = "Sell Short"
+    end
+
+    -- Displayed
+    t.displayed = bit32.band(bit32.rshift(value, 3), 0x01)
+    t.displayed_desc = (t.displayed == 0) and "No" or "Yes"
+
+    -- PostOnly
+    t.postonly = bit32.band(bit32.rshift(value, 4), 0x01)
+    t.postonly_desc = (t.postonly == 0) and "No" or "Yes"
+
+    -- Locate Required
+    t.locate_required = bit32.band(bit32.rshift(value, 5), 0x01)
+    t.locate_required_desc = (t.locate_required == 0) and "No/Not Applicable" or "Yes"
+
+    -- ISO
+    t.iso = bit32.band(bit32.rshift(value, 6), 0x01)
+    t.iso_desc = (t.iso == 0) and "No" or "Yes"
+
+    -- Retail Order
+    t.retail_order = bit32.band(bit32.rshift(value, 7), 0x01)
+    t.retail_order_desc = (t.retail_order == 0) and "No" or "Yes"
+
+    -- Attributable Order
+    t.attributable_order = bit32.band(bit32.rshift(value, 8), 0x03)
+    if t.attributable_order == 0 then
+        t.attributable_order_desc = "No"
+    elseif t.attributable_order == 1 then
+        t.attributable_order_desc = "Attributed to Firm MPID"
+    elseif t.attributable_order == 2 then
+        t.attributable_order_desc = "Attributed 'RTAL' to this order"
+    end
+
+    -- MinQty Exec Type
+    t.minqty_exec_type = bit32.band(bit32.rshift(value, 10), 0x03)
+    if t.minqty_exec_type == 0 then
+        t.minqty_exec_type_desc = "Not Applicable"
+    elseif t.minqty_exec_type == 1 then
+        t.minqty_exec_type_desc = "Only single contra order can fulfill MinQty requirement"
+    elseif t.minqty_exec_type == 2 then
+        t.minqty_exec_type_desc = "Multiple contra orders can fulfill MinQty requirement"
+    end
+
+    -- Cancel Order if NOT a NBBO Setter
+    t.nbbo_setter_cancel = bit32.band(bit32.rshift(value, 12), 0x01)
+    t.nbbo_setter_cancel_desc = (t.nbbo_setter_cancel == 0) and "No" or "Yes"
+
+    -- Reserved bits
+    t.reserved = bit32.band(bit32.rshift(value, 13), 0x07)  -- Last 3 bits (13-15)
+
+    return t
+end
+
+local function add_order_instructions_to_subtree(subtree, value)
+    local decoded = decode_order_instructions(value)
+    subtree:add(ESesM.fields.order_side, decoded.side, string.format("Side: %s", decoded.side_desc))
+    subtree:add(ESesM.fields.order_short_sale_indicator, decoded.short_sale_indicator, string.format("Short Sale Indicator: %s", decoded.short_sale_indicator_desc))
+    subtree:add(ESesM.fields.order_displayed, decoded.displayed, string.format("Displayed: %s", decoded.displayed_desc))
+    subtree:add(ESesM.fields.order_postonly, decoded.postonly, string.format("PostOnly: %s", decoded.postonly_desc))
+    subtree:add(ESesM.fields.order_locate_required, decoded.locate_required, string.format("Locate Required: %s", decoded.locate_required_desc))
+    subtree:add(ESesM.fields.order_iso, decoded.iso, string.format("ISO: %s", decoded.iso_desc))
+    subtree:add(ESesM.fields.order_retail_order, decoded.retail_order, string.format("Retail Order: %s", decoded.retail_order_desc))
+    subtree:add(ESesM.fields.order_attributable_order, decoded.attributable_order, string.format("Attributable Order: %s", decoded.attributable_order_desc))
+    subtree:add(ESesM.fields.order_minqty_exec_type, decoded.minqty_exec_type, string.format("MinQty Exec Type: %s", decoded.minqty_exec_type_desc))
+    subtree:add(ESesM.fields.order_nbbo_setter_cancel, decoded.nbbo_setter_cancel, string.format("Cancel Order if NOT a NBBO Setter: %s", decoded.nbbo_setter_cancel_desc))
+    subtree:add(ESesM.fields.order_reserved, decoded.reserved, number_to_binary_str(decoded.reserved))
+end
+
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree, offset, packet_length)
     subtree:add(ESesM.fields.reserved, buffer(offset, 8))
@@ -461,10 +558,11 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     subtree:add_le(ESesM.fields.size, buffer(offset, 4))
     offset = offset + 4
 
+
     local order_instructions_field = buffer(offset, 2)  -- Read 2 bytes (16 bits)
     local order_instructions_value = order_instructions_field:le_uint()  -- Read 2 bytes (16 bits)
-    local order_instructions_binary_str = number_to_binary_str(order_instructions_value, 16)    
-    subtree:add(ESesM.fields.order_instructions, order_instructions_field, order_instructions_binary_str)
+    order_instructions_subtree = subtree:add(ESesM.fields.order_instructions, order_instructions_field, number_to_binary_str(order_instructions_value))
+    add_order_instructions_to_subtree(order_instructions_subtree, order_instructions_value)
     offset = offset + 2
 
     subtree:add(ESesM.fields.time_in_force, buffer(offset, 1))
@@ -476,7 +574,7 @@ local function process_new_order(buffer, subtree, offset, packet_length)
 
     local self_trade_protection_field = buffer(offset, 1)
     local self_trade_protection_value = self_trade_protection_field:le_uint()  -- Read 2 bytes (16 bits)
-    local self_trade_protection_binary_str = number_to_binary_str(order_instructions_value, 16)    
+    local self_trade_protection_binary_str = number_to_binary_str(self_trade_protection_value, 16)    
     subtree:add(ESesM.fields.self_trade_protection, self_trade_protection_field, self_trade_protection_binary_str)
     offset = offset + 1
 
