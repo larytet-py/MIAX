@@ -466,61 +466,61 @@ local function decode_order_instructions(value)
 
     -- Side
     t.side = bit32.band(bit32.rshift(value, 0), 0x01)
-    t.side_desc = (t.side == 0) and "Buy" or "Sell"
+    t.side_desc = (t.side == 0) and "Buy (0)" or "Sell (1)"
 
     -- Short Sale Indicator
     t.short_sale_indicator = bit32.band(bit32.rshift(value, 1), 0x03)
     if t.short_sale_indicator == 0 then
-        t.short_sale_indicator_desc = "Not Applicable (when buying)"
+        t.short_sale_indicator_desc = "Not Applicable (when buying) (0)"
     elseif t.short_sale_indicator == 1 then
-        t.short_sale_indicator_desc = "Sell Long"
+        t.short_sale_indicator_desc = "Sell Long (1)"
     elseif t.short_sale_indicator == 2 then
-        t.short_sale_indicator_desc = "Sell Short"
+        t.short_sale_indicator_desc = "Sell Short (2)"
     end
 
     -- Displayed
     t.displayed = bit32.band(bit32.rshift(value, 3), 0x01)
-    t.displayed_desc = (t.displayed == 0) and "No" or "Yes"
+    t.displayed_desc = (t.displayed == 0) and "No (0)" or "Yes (1)"
 
     -- PostOnly
     t.postonly = bit32.band(bit32.rshift(value, 4), 0x01)
-    t.postonly_desc = (t.postonly == 0) and "No" or "Yes"
+    t.postonly_desc = (t.postonly == 0) and "No (0)" or "Yes (1)"
 
     -- Locate Required
     t.locate_required = bit32.band(bit32.rshift(value, 5), 0x01)
-    t.locate_required_desc = (t.locate_required == 0) and "No/Not Applicable" or "Yes"
+    t.locate_required_desc = (t.locate_required == 0) and "No/Not Applicable (0)" or "Yes (1)"
 
     -- ISO
     t.iso = bit32.band(bit32.rshift(value, 6), 0x01)
-    t.iso_desc = (t.iso == 0) and "No" or "Yes"
+    t.iso_desc = (t.iso == 0) and "No (0)" or "Yes (1)"
 
     -- Retail Order
     t.retail_order = bit32.band(bit32.rshift(value, 7), 0x01)
-    t.retail_order_desc = (t.retail_order == 0) and "No" or "Yes"
+    t.retail_order_desc = (t.retail_order == 0) and "No (0)" or "Yes (1)"
 
     -- Attributable Order
     t.attributable_order = bit32.band(bit32.rshift(value, 8), 0x03)
     if t.attributable_order == 0 then
-        t.attributable_order_desc = "No"
+        t.attributable_order_desc = "No (0)"
     elseif t.attributable_order == 1 then
-        t.attributable_order_desc = "Attributed to Firm MPID"
+        t.attributable_order_desc = "Attributed to Firm MPID (1)"
     elseif t.attributable_order == 2 then
-        t.attributable_order_desc = "Attributed 'RTAL' to this order"
+        t.attributable_order_desc = "Attributed 'RTAL' to this order (2)"
     end
 
     -- MinQty Exec Type
     t.minqty_exec_type = bit32.band(bit32.rshift(value, 10), 0x03)
     if t.minqty_exec_type == 0 then
-        t.minqty_exec_type_desc = "Not Applicable"
+        t.minqty_exec_type_desc = "Not Applicable (0)"
     elseif t.minqty_exec_type == 1 then
-        t.minqty_exec_type_desc = "Only single contra order can fulfill MinQty requirement"
+        t.minqty_exec_type_desc = "Only single contra order can fulfill MinQty requirement (1)"
     elseif t.minqty_exec_type == 2 then
-        t.minqty_exec_type_desc = "Multiple contra orders can fulfill MinQty requirement"
+        t.minqty_exec_type_desc = "Multiple contra orders can fulfill MinQty requirement (2)"
     end
 
     -- Cancel Order if NOT a NBBO Setter
     t.nbbo_setter_cancel = bit32.band(bit32.rshift(value, 12), 0x01)
-    t.nbbo_setter_cancel_desc = (t.nbbo_setter_cancel == 0) and "No" or "Yes"
+    t.nbbo_setter_cancel_desc = (t.nbbo_setter_cancel == 0) and "No (0)" or "Yes (1)"
 
     -- Reserved bits
     t.reserved = bit32.band(bit32.rshift(value, 13), 0x07)  -- Last 3 bits (13-15)
