@@ -24,7 +24,7 @@ local fields = {
     mpid                              = {"string", "MPID",                         base.ASCII},
     client_order_id                   = {"string", "Client Order ID",              base.ASCII},
     symbol_id                         = {"bytes",  "Symbol ID"},
-    price                             = {"bytes",  "Price"},
+    price                             = {"double",  "Price"},
     size                              = {"uint32", "Size",                         base.DEC},
     order_instructions                = {"string", "Order instructions",           base.ASCII},
     time_in_force                     = {"string", "Time in force",                base.ASCII},
@@ -431,33 +431,20 @@ function number_to_binary_str(num, bits)
     return table.concat(t)
 end
 
+-- Convert the UInt64 userdata to a string
 -- BinaryU Field with the last 6 (right most) digit places being decimal places.
 -- $1.00 is represented as 1,000,000
 function binaryU_to_price(binaryU)
-    -- Convert the UInt64 userdata to a string
     local numStr = tostring(binaryU)
-    
-    -- Print the input value
-    print("Input binaryU:", binaryU)
-
     if #numStr > 6 then
         local intPart = numStr:sub(1, -7)  -- Get all but the last six digits
         local decPart = numStr:sub(-6)     -- Get the last six digits
 
-        -- Print the intermediate parts
-        print("Integer part:", intPart)
-        print("Decimal part:", decPart)
-
-        -- Convert to number and print the result before returning
         local result = tonumber(intPart .. "." .. decPart)
-        print("Return value:", result)
         return result
     else
         -- Handle case where the number is entirely fractional
         local result = tonumber("0." .. numStr)
-
-        -- Print the result for entirely fractional input
-        print("Return value (fractional):", result)
         return result
     end
 end
