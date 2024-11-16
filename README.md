@@ -17,7 +17,14 @@ Creeate a hard link to the LUA script
 
 ```
 mkdir -p /home/$USER/.local/lib/wireshark/plugins
-ln  esesm.lua /home/$USER/.local/lib/wireshark/plugins/3.6/esesm.lua
+ln  ./esesm.lua /home/$USER/.local/lib/wireshark/plugins/3.6/esesm.lua
+```
+
+or copy the file 
+
+```
+mkdir -p /home/$USER/.local/lib/wireshark/plugins
+cp  ./esesm.lua /home/$USER/.local/lib/wireshark/plugins/3.6/.
 ```
 
 If needed enable LUA support in _Edit->Preferences->Lua_ or in the `~/.local/lib/wireshark/init.lua` . In the _About->Plugins_ look for `ESESM`. Reload the plugin _Analyze->Relaod LUA Plugins_.
@@ -25,6 +32,10 @@ See _Tools_LUA_Console_ for debug output.
 
 In the _Analyze->Decode As_ Pick TCP, port 41010, in the current pick ESESM.
 
+## Limitations
+
+* There are still a lot of stubs
+* Assumes Wireshark 3.6
 
 ## Links
 
