@@ -438,7 +438,7 @@ end
 function binaryU_to_price(binaryU)
     local numStr = tostring(binaryU)
     if #numStr > 6 then
-        local intPart = numStr:sub(1, -7)  -- Get all but the last six digits
+        local intPart = numStr:sub(1, -7)  -- Get all but the last six digits, like /1,000,000
         local decPart = numStr:sub(-6)     -- Get the last six digits
 
         local result = tonumber(intPart .. "." .. decPart)
