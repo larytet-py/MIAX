@@ -540,7 +540,7 @@ local function add_order_instructions_to_subtree(subtree, value)
     subtree:add(ESesM.fields.order_attributable_order, decoded.attributable_order, string.format("Attributable Order: %s", decoded.attributable_order_desc))
     subtree:add(ESesM.fields.order_minqty_exec_type, decoded.minqty_exec_type, string.format("MinQty Exec Type: %s", decoded.minqty_exec_type_desc))
     subtree:add(ESesM.fields.order_nbbo_setter_cancel, decoded.nbbo_setter_cancel, string.format("Cancel Order if NOT a NBBO Setter: %s", decoded.nbbo_setter_cancel_desc))
-    subtree:add(ESesM.fields.order_reserved, decoded.reserved, number_to_binary_str(decoded.reserved))
+    -- subtree:add(ESesM.fields.order_reserved, decoded.reserved, number_to_binary_str(decoded.reserved))
 end
 
 -- Function to process New Order (N1)
