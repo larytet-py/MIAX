@@ -65,17 +65,82 @@ local fields = {
     ticker_symbol                     = {"string", "Ticker symbol",                base.ASCII},
 
 
-    order_side                        = {"uint16",  "Side",                        base.DEC, {[0] = "Buy", [1] = "Sell"}, 0x01},
-    order_short_sale_indicator        = {"uint16",  "Short Sale Indicator",        base.DEC, {[0] = "Not Applicable", [1] = "Sell Long", [2] = "Sell Short", [3] = "Sell Short Exempt"}, 0x06},
-    order_displayed                   = {"uint16",  "Displayed",                   base.DEC, {[0] = "No", [1] = "Yes"}, 0x08},
-    order_postonly                    = {"uint16",  "PostOnly",                    base.DEC, {[0] = "No", [1] = "Yes"}, 0x10},
-    order_locate_required             = {"uint16",  "Locate Required",             base.DEC, {[0] = "No/Not Applicable", [1] = "Yes"}, 0x20},
-    order_iso                         = {"uint16",  "ISO",                         base.DEC, {[0] = "No", [1] = "Yes"}, 0x40},
-    order_retail_order                = {"uint16",  "Retail Order",                base.DEC, {[0] = "No", [1] = "Yes"}, 0x80},
-    order_attributable_order          = {"uint16",  "Attributable Order",          base.DEC, {[0] = "No", [1] = "Attributed to Firm MPID", [2] = "Attributed 'RTAL'"}, 0x300},
-    order_minqty_exec_type            = {"uint16",  "MinQty Exec Type",            base.DEC, {[0] = "Not Applicable", [1] = "Only single contra order can fulfill", [2] = "Multiple contra orders can fulfill"}, 0xC00},
-    order_nbbo_setter_cancel          = {"uint16",  "Cancel Order if NOT NBBO",    base.DEC, {[0] = "No", [1] = "Yes"}, 0x1000},
-    order_reserved                    = {"uint16",  "Reserved",                    base.HEX, nil, 0xE000}
+    order_side = {
+        "uint16", "Side", base.DEC, 
+        {[0] = "Buy", [1] = "Sell"}, 
+        0x01
+    },
+    order_short_sale_indicator = {
+        "uint16", "Short Sale Indicator", base.DEC, 
+        {[0] = "Not Applicable", [1] = "Sell Long", [2] = "Sell Short", [3] = "Sell Short Exempt"}, 
+        0x06
+    },
+    order_displayed = {
+        "uint16", "Displayed", base.DEC, 
+        {[0] = "No", [1] = "Yes"}, 
+        0x08
+    },
+    order_postonly = {
+        "uint16", "PostOnly", base.DEC, 
+        {[0] = "No", [1] = "Yes"}, 
+        0x10
+    },
+    order_locate_required = {
+        "uint16", "Locate Required", base.DEC, 
+        {[0] = "No/Not Applicable", [1] = "Yes"}, 
+        0x20
+    },
+    order_iso = {
+        "uint16", "ISO", base.DEC, 
+        {[0] = "No", [1] = "Yes"}, 
+        0x40
+    },
+    order_retail_order = {
+        "uint16", "Retail Order", base.DEC, 
+        {[0] = "No", [1] = "Yes"}, 
+        0x80
+    },
+    order_attributable_order = {
+        "uint16", "Attributable Order", base.DEC, 
+        {[0] = "No", [1] = "Attributed to Firm MPID", [2] = "Attributed 'RTAL'"}, 
+        0x300
+    },
+    order_minqty_exec_type = {
+        "uint16", "MinQty Exec Type", base.DEC, 
+        {[0] = "Not Applicable", [1] = "Only single contra order can fulfill", [2] = "Multiple contra orders can fulfill"}, 
+        0xC00
+    },
+    order_nbbo_setter_cancel = {
+        "uint16", "Cancel Order if NOT NBBO", base.DEC, 
+        {[0] = "No", [1] = "Yes"}, 
+        0x1000
+    },
+    order_reserved = {
+        "uint16", "Reserved", base.HEX, 
+        nil, 
+        0xE000
+    },
+
+    self_trade_protection_level = {
+        "uint8", "Self Trade Protection Level", base.DEC, {
+            [0] = "Self Trade Protection Disabled",
+            [1] = "Firm",
+            [2] = "MPID",
+            [3] = "Parent Group"
+        }, 0x07  -- Bitmask for bits 0-2
+    },
+    self_trade_protection_instruction = {
+        "uint8", "Self Trade Protection Instruction", base.DEC, {
+            [0] = "Not Applicable",
+            [1] = "Cancel Newest",
+            [2] = "Cancel Oldest",
+            [3] = "Cancel Both",
+            [4] = "Decrement and Cancel"
+        }, 0x38  -- Bitmask for bits 3-5
+    },
+    self_trade_protection_reserved = {
+        "uint8", "Reserved for future use", base.HEX, nil, 0xC0  -- Bitmask for bits 6-7
+    }
 }
 
 -- Declare all possible protocol fields as required by Wireshark.
@@ -479,6 +544,13 @@ local function add_order_instructions_to_subtree(subtree, value)
     subtree:add(ESesM.fields.order_reserved, bit32.band(bit32.rshift(value, 13), 0x07))
 end
 
+local function add_self_trade_protection_to_subtree(subtree, value)
+    -- Decode and add self-trade protection fields directly to the subtree
+    subtree:add(ESesM.fields.self_trade_protection_level, bit32.band(value, 0x07))
+    subtree:add(ESesM.fields.self_trade_protection_instruction, bit32.band(bit32.rshift(value, 3), 0x07))
+    subtree:add(ESesM.fields.self_trade_protection_reserved, bit32.band(bit32.rshift(value, 6), 0x03))
+end
+
 -- Function to process New Order (N1)
 local function process_new_order(buffer, subtree, offset, packet_length)
     subtree:add(ESesM.fields.reserved, buffer(offset, 8))
@@ -511,7 +583,8 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     local self_trade_protection_field = buffer(offset, 1)
     local self_trade_protection_value = self_trade_protection_field:le_uint()  -- Read 2 bytes (16 bits)
     local self_trade_protection_binary_str = number_to_binary_str(self_trade_protection_value, 16)    
-    subtree:add(ESesM.fields.self_trade_protection, self_trade_protection_field, self_trade_protection_binary_str)
+    self_trade_protection_subtree = subtree:add(ESesM.fields.self_trade_protection, self_trade_protection_field, self_trade_protection_binary_str)
+    add_self_trade_protection_to_subtree(self_trade_protection_subtree, self_trade_protection_value)
     offset = offset + 1
 
     subtree:add(ESesM.fields.self_trade_protection_group, buffer(offset, 1))
