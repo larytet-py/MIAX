@@ -24,7 +24,7 @@ local fields = {
     mpid                              = {"string", "MPID",                         base.ASCII},
     client_order_id                   = {"string", "Client Order ID",              base.ASCII},
     symbol_id                         = {"bytes",  "Symbol ID"},
-    price                             = {"double",  "Price"},
+    price                             = {"string",  "Price"},
     size                              = {"uint32", "Size",                         base.DEC},
     order_instructions                = {"string", "Order instructions",           base.ASCII},
     time_in_force                     = {"string", "Time in force",                base.ASCII},
@@ -539,7 +539,7 @@ local function process_new_order_response(buffer, subtree, offset, packet_length
 
     local binaryU_value = buffer(offset, 8):le_uint64()
     local price = binaryU_to_price(binaryU_value)    
-    subtree:add(ESesM.fields.price, buffer(offset, 8), string.format("%.2f", price))
+    subtree:add(ESesM.fields.price, buffer(offset, 8), string.format("%s (%.2f)", tostring(binaryU_value), price))
     offset = offset + 8
 
     subtree:add_le(ESesM.fields.size, buffer(offset, 4))
@@ -586,7 +586,7 @@ local function process_new_order(buffer, subtree, offset, packet_length)
 
     local binaryU_value = buffer(offset, 8):le_uint64()
     local price = binaryU_to_price(binaryU_value)    
-    subtree:add(ESesM.fields.price, buffer(offset, 8), string.format("%.2f", price))
+    subtree:add(ESesM.fields.price, buffer(offset, 8), string.format("%s (%.2f)", tostring(binaryU_value), price))
     offset = offset + 8
 
     subtree:add_le(ESesM.fields.size, buffer(offset, 4))
