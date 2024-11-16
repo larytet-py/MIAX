@@ -89,17 +89,6 @@ local e_info_message = ProtoField.string("ESesM.info_text", "Info Text")
 
 ESesM.experts = { e_undecoded, e_packet_too_short }
 
-function number_to_binary_str(num, bits)
-    bits = bits or 16  -- Default to 16 bits if not specified
-    local t = {}
-    for b = bits, 1, -1 do
-        local rest = math.floor(num / 2^(b - 1))
-        num = num % 2^(b - 1)
-        t[#t + 1] = (rest % 2 == 1) and "1" or "0"
-    end
-    return table.concat(t)
-end
-
 local new_order_status_descriptions = {
     [" "] = "Successful",
     ["A"] = "Duplicate Client Order ID",
@@ -347,6 +336,17 @@ end
 
 function get_trading_center(code)
     return executing_trading_center[code] or "Unknown trading center"
+end
+
+function number_to_binary_str(num, bits)
+    bits = bits or 16  -- Default to 16 bits if not specified
+    local t = {}
+    for b = bits, 1, -1 do
+        local rest = math.floor(num / 2^(b - 1))
+        num = num % 2^(b - 1)
+        t[#t + 1] = (rest % 2 == 1) and "1" or "0"
+    end
+    return table.concat(t)
 end
 
 local function process_status_login(buffer, subtree, offset)
