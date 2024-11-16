@@ -44,7 +44,7 @@ local fields = {
     locate_account                    = {"string", "Locate Account",               base.ASCII},
     purge_group                       = {"string", "Purge group",                  base.ASCII},
     matching_engine_time              = {"uint64", "Matching engine time",         base.DEC},
-    order_id                          = {"uint32", "Order ID",                     base.DEC},
+    order_id                          = {"uint64", "Order ID",                     base.DEC},
     modify_order                      = {"bytes",  "Modify order"},
     modify_order_response             = {"bytes",  "Modify order response"},
     cancel_order                      = {"bytes",  "Cancel order"},
@@ -65,37 +65,40 @@ local fields = {
     ticker_symbol                     = {"string", "Ticker symbol",                base.ASCII},
 
 
-    order_side                        = {"string", "Side",                         base.NONE},
-    order_short_sale_indicator        = {"uint8",  "Short Sale Indicator",         base.DEC},  
-    order_displayed                   = {"bool",   "Displayed"},  
-    order_postonly                    = {"bool",   "PostOnly"},  
-    order_locate_required             = {"bool",   "Locate Required"},  
-    order_iso                         = {"bool",   "ISO"},  
-    order_retail_order                = {"bool",   "Retail Order"},  
-    order_attributable_order          = {"uint8",  "Attributable Order",           base.DEC},  
-    order_minqty_exec_type            = {"uint8",  "MinQty Exec Type",             base.DEC},  
-    order_nbbo_setter_cancel          = {"bool",   "Cancel Order if NOT a NBBO Setter"},  
-    order_reserved                    = {"uint8",  "Reserved",                     base.HEX}
+    order_side                        = {"uint16",  "Side",                         base.DEC, {[0] = "Buy", [1] = "Sell"}, 0x01},
+    order_short_sale_indicator        = {"uint16",  "Short Sale Indicator",         base.DEC, {[0] = "Not Applicable", [1] = "Sell Long", [2] = "Sell Short", [3] = "Sell Short Exempt"}, 0x06},
+    order_displayed                   = {"uint16",   "Displayed",                    base.DEC, {[0] = "No", [1] = "Yes"}, 0x08},
+    order_postonly                    = {"uint16",   "PostOnly",                     base.DEC, {[0] = "No", [1] = "Yes"}, 0x10},
+    order_locate_required             = {"uint16",   "Locate Required",              base.DEC, {[0] = "No/Not Applicable", [1] = "Yes"}, 0x20},
+    order_iso                         = {"uint16",   "ISO",                          base.DEC, {[0] = "No", [1] = "Yes"}, 0x40},
+    order_retail_order                = {"uint16",   "Retail Order",                 base.DEC, {[0] = "No", [1] = "Yes"}, 0x80},
+    order_attributable_order          = {"uint16",  "Attributable Order",           base.DEC, {[0] = "No", [1] = "Attributed to Firm MPID", [2] = "Attributed 'RTAL'"}, 0x300},
+    order_minqty_exec_type            = {"uint16",  "MinQty Exec Type",             base.DEC, {[0] = "Not Applicable", [1] = "Only single contra order can fulfill", [2] = "Multiple contra orders can fulfill"}, 0xC00},
+    order_nbbo_setter_cancel          = {"uint16",   "Cancel Order if NOT a NBBO Setter", base.DEC, {[0] = "No", [1] = "Yes"}, 0x1000},
+    order_reserved                    = {"uint16",  "Reserved",                     base.HEX, nil, 0xE000}
 }
-
-local function createFieldId(baseName, fieldName)
-    return baseName .. "." .. fieldName:gsub("_", ".")
-end
 
 -- Declare all possible protocol fields as required by Wireshark.
 -- Initialize all ProtoFields with the dynamically constructed IDs and properties
 -- This is an equivalent of a lof lines like 
---    ESesM.fields.packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
+-- ESesM.fields.packet_length = ProtoField.uint16("ESesM.packet_length", "Length", base.DEC)
 for key, val in pairs(fields) do
-    local dtype, desc, base = unpack(val)
+    local dtype, desc, base, values, mask = unpack(val)
     local fieldId = string.format("%s.%s", baseName, key:gsub("_", "."))
-    if base then
-        ESesM.fields[key] = ProtoField[dtype](fieldId, desc, base)
+
+    if values then
+        -- If values are present, assume base is also present and initialize with both values and mask
+        ESesM.fields[key] = ProtoField[dtype](fieldId, desc, base, values, mask)
     else
-        ESesM.fields[key] = ProtoField[dtype](fieldId, desc)
+        -- If no values are provided, initialize the field only with base if it exists
+        if base then
+            ESesM.fields[key] = ProtoField[dtype](fieldId, desc, base)
+        else
+            -- If base is also not provided, initialize without it
+            ESesM.fields[key] = ProtoField[dtype](fieldId, desc)
+        end
     end
 end
-
 
 local e_undecoded = ProtoExpert.new("ESesM.unexpected_packet_type.expert", "Unexpected packet type", expert.group.UNDECODED, expert.severity.ERROR)
 local e_packet_too_short = ProtoExpert.new("ESesM.packet_too_short.expert", "Packet is too short", expert.group.MALFORMED, expert.severity.ERROR)
@@ -461,86 +464,19 @@ local function process_new_order_response(buffer, subtree, offset, packet_length
 end
 
 
-local function decode_order_instructions(value)
-    local t = {}
-
-    -- Side
-    t.side = bit32.band(bit32.rshift(value, 0), 0x01)
-    t.side_desc = (t.side == 0) and "Buy (0)" or "Sell (1)"
-
-    -- Short Sale Indicator
-    t.short_sale_indicator = bit32.band(bit32.rshift(value, 1), 0x03)
-    if t.short_sale_indicator == 0 then
-        t.short_sale_indicator_desc = "Not Applicable (when buying) (0)"
-    elseif t.short_sale_indicator == 1 then
-        t.short_sale_indicator_desc = "Sell Long (1)"
-    elseif t.short_sale_indicator == 2 then
-        t.short_sale_indicator_desc = "Sell Short (2)"
-    end
-
-    -- Displayed
-    t.displayed = bit32.band(bit32.rshift(value, 3), 0x01)
-    t.displayed_desc = (t.displayed == 0) and "No (0)" or "Yes (1)"
-
-    -- PostOnly
-    t.postonly = bit32.band(bit32.rshift(value, 4), 0x01)
-    t.postonly_desc = (t.postonly == 0) and "No (0)" or "Yes (1)"
-
-    -- Locate Required
-    t.locate_required = bit32.band(bit32.rshift(value, 5), 0x01)
-    t.locate_required_desc = (t.locate_required == 0) and "No/Not Applicable (0)" or "Yes (1)"
-
-    -- ISO
-    t.iso = bit32.band(bit32.rshift(value, 6), 0x01)
-    t.iso_desc = (t.iso == 0) and "No (0)" or "Yes (1)"
-
-    -- Retail Order
-    t.retail_order = bit32.band(bit32.rshift(value, 7), 0x01)
-    t.retail_order_desc = (t.retail_order == 0) and "No (0)" or "Yes (1)"
-
-    -- Attributable Order
-    t.attributable_order = bit32.band(bit32.rshift(value, 8), 0x03)
-    if t.attributable_order == 0 then
-        t.attributable_order_desc = "No (0)"
-    elseif t.attributable_order == 1 then
-        t.attributable_order_desc = "Attributed to Firm MPID (1)"
-    elseif t.attributable_order == 2 then
-        t.attributable_order_desc = "Attributed 'RTAL' to this order (2)"
-    end
-
-    -- MinQty Exec Type
-    t.minqty_exec_type = bit32.band(bit32.rshift(value, 10), 0x03)
-    if t.minqty_exec_type == 0 then
-        t.minqty_exec_type_desc = "Not Applicable (0)"
-    elseif t.minqty_exec_type == 1 then
-        t.minqty_exec_type_desc = "Only single contra order can fulfill MinQty requirement (1)"
-    elseif t.minqty_exec_type == 2 then
-        t.minqty_exec_type_desc = "Multiple contra orders can fulfill MinQty requirement (2)"
-    end
-
-    -- Cancel Order if NOT a NBBO Setter
-    t.nbbo_setter_cancel = bit32.band(bit32.rshift(value, 12), 0x01)
-    t.nbbo_setter_cancel_desc = (t.nbbo_setter_cancel == 0) and "No (0)" or "Yes (1)"
-
-    -- Reserved bits
-    t.reserved = bit32.band(bit32.rshift(value, 13), 0x07)  -- Last 3 bits (13-15)
-
-    return t
-end
-
 local function add_order_instructions_to_subtree(subtree, value)
-    local decoded = decode_order_instructions(value)
-    subtree:add(ESesM.fields.order_side, decoded.side, string.format("Side: %s", decoded.side_desc))
-    subtree:add(ESesM.fields.order_short_sale_indicator, decoded.short_sale_indicator, string.format("Short Sale Indicator: %s", decoded.short_sale_indicator_desc))
-    subtree:add(ESesM.fields.order_displayed, decoded.displayed, string.format("Displayed: %s", decoded.displayed_desc))
-    subtree:add(ESesM.fields.order_postonly, decoded.postonly, string.format("PostOnly: %s", decoded.postonly_desc))
-    subtree:add(ESesM.fields.order_locate_required, decoded.locate_required, string.format("Locate Required: %s", decoded.locate_required_desc))
-    subtree:add(ESesM.fields.order_iso, decoded.iso, string.format("ISO: %s", decoded.iso_desc))
-    subtree:add(ESesM.fields.order_retail_order, decoded.retail_order, string.format("Retail Order: %s", decoded.retail_order_desc))
-    subtree:add(ESesM.fields.order_attributable_order, decoded.attributable_order, string.format("Attributable Order: %s", decoded.attributable_order_desc))
-    subtree:add(ESesM.fields.order_minqty_exec_type, decoded.minqty_exec_type, string.format("MinQty Exec Type: %s", decoded.minqty_exec_type_desc))
-    subtree:add(ESesM.fields.order_nbbo_setter_cancel, decoded.nbbo_setter_cancel, string.format("Cancel Order if NOT a NBBO Setter: %s", decoded.nbbo_setter_cancel_desc))
-    -- subtree:add(ESesM.fields.order_reserved, decoded.reserved, number_to_binary_str(decoded.reserved))
+    -- Decode and add fields directly to the subtree
+    subtree:add(ESesM.fields.order_side, bit32.band(value, 0x01))
+    subtree:add(ESesM.fields.order_short_sale_indicator, bit32.band(bit32.rshift(value, 1), 0x03))
+    subtree:add(ESesM.fields.order_displayed, bit32.band(bit32.rshift(value, 3), 0x01))
+    subtree:add(ESesM.fields.order_postonly, bit32.band(bit32.rshift(value, 4), 0x01))
+    subtree:add(ESesM.fields.order_locate_required, bit32.band(bit32.rshift(value, 5), 0x01))
+    subtree:add(ESesM.fields.order_iso, bit32.band(bit32.rshift(value, 6), 0x01))
+    subtree:add(ESesM.fields.order_retail_order, bit32.band(bit32.rshift(value, 7), 0x01))
+    subtree:add(ESesM.fields.order_attributable_order, bit32.band(bit32.rshift(value, 8), 0x03))
+    subtree:add(ESesM.fields.order_minqty_exec_type, bit32.band(bit32.rshift(value, 10), 0x03))
+    subtree:add(ESesM.fields.order_nbbo_setter_cancel, bit32.band(bit32.rshift(value, 12), 0x01))
+    subtree:add(ESesM.fields.order_reserved, bit32.band(bit32.rshift(value, 13), 0x07))
 end
 
 -- Function to process New Order (N1)
