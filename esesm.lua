@@ -159,7 +159,6 @@ for key, val in pairs(fields) do
     else
         -- If no values are provided, initialize the field only with base if it exists
         if base then
-            print(fieldId)
             ESesM.fields[key] = ProtoField[dtype](fieldId, desc, base)
         else
             -- If base is also not provided, initialize without it
