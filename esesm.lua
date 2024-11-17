@@ -701,7 +701,7 @@ local function handle_sequenced(buffer, subtree, offset, packet_length)
         process_execution_notification(buffer, item, offset, packet_length)
     else
         local item = sequenced_packet_tree:add(ESesM.fields.new_order, buffer(offset, packet_length-offset))
-        item:add_proto_expert_info(e_undecoded, "Unexpected unsequenced packet type: " .. packet_type)
+        item:add_proto_expert_info(e_undecoded, "Unexpected sequenced packet type: " .. packet_type)
     end
 end
 
