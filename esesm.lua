@@ -596,8 +596,8 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     subtree:add_le(ESesM.fields.size, buffer(offset, 4))
     offset = offset + 4
 
-    local order_instructions_field = buffer(offset, 2)  -- Read 2 bytes (16 bits)
-    local order_instructions_value = order_instructions_field:le_uint()  -- Read 2 bytes (16 bits)
+    local order_instructions_field = buffer(offset, 2)
+    local order_instructions_value = order_instructions_field:le_uint()
     order_instructions_subtree = subtree:add(ESesM.fields.order_instructions, order_instructions_field, number_to_binary_str(order_instructions_value))
     add_order_instructions_to_subtree(order_instructions_subtree, order_instructions_value)
     offset = offset + 2
@@ -610,7 +610,7 @@ local function process_new_order(buffer, subtree, offset, packet_length)
     offset = offset + 1
 
     local self_trade_protection_field = buffer(offset, 1)
-    local self_trade_protection_value = self_trade_protection_field:le_uint()  -- Read 2 bytes (16 bits)
+    local self_trade_protection_value = self_trade_protection_field:le_uint()
     local self_trade_protection_binary_str = number_to_binary_str(self_trade_protection_value, 16)    
     self_trade_protection_subtree = subtree:add(ESesM.fields.self_trade_protection, self_trade_protection_field, self_trade_protection_binary_str)
     add_self_trade_protection_to_subtree(self_trade_protection_subtree, self_trade_protection_value)
